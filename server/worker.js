@@ -8,6 +8,7 @@ import { mcp } from './mcp.js';
 // - /err: receives short crash notes from the app (message and code location only) so problems get fixed
 // - /mcp: the Safar connector for Claude and ChatGPT (see mcp.js)
 // - /ev, /feedback: anonymous usage counts and in-app feedback; /admin shows them (admin key)
+// - /transit/near: live public transport departures near a point (Transit API, when its key is set; kept under the free 1,500 calls a month)
 // - /hotel-rates: live room prices for the trip dates (LiteAPI, when its key is set)
 // - /admin/export, /admin/import: weekly off-site backup and restore (admin keys only)
 // - /pay/webhook, /me/pro: Safar Pro purchases through Stripe payment links (Stripe-signed) and the signed-in user's Pro status
@@ -86,8 +87,8 @@ async function githubBackupJob(req) {
   } catch (e) { return false; }
 }
 // ---- abuse limits: per-address caps per hour, kept in memory (free, no storage writes). Each server copy counts on its own, so the caps are approximate. ----
-const CAPS = { 'hotel-rates': 60, 'live-new': 20, 'live-put': 600, mcp: 120, overpass: 300, auth: 30, 'trip-put': 600, export: 200 };
-let HITS = new Map(), HITS_HOUR = 0;
+const CAPS = { transit: 60, 'hotel-rates': 60, 'live-new': 20, 'live-put': 600, mcp: 120, overpass: 300, auth: 30, 'trip-put': 600, export: 200 };
+let HITS = new Map(), HITS_HOUR = 0; const TRM = { m: 0, n: 0 };
 function overCap(req, kind) {
   const hr = Math.floor(Date.now() / 36e5); if (hr !== HITS_HOUR || HITS.size > 20000) { HITS = new Map(); HITS_HOUR = hr; }
   const k = kind + '|' + (req.headers.get('CF-Connecting-IP') || '?'), n = (HITS.get(k) || 0) + 1; HITS.set(k, n);
@@ -158,6 +159,31 @@ export default {
         const pct = Object.fromEntries(Object.keys(LIMITS).map(k => [k, Math.round((use[k] || 0) / LIMITS[k] * 100)]));
         return json(req, { ok: true, v: 7, day: d, usage: use, freePlanLimits: LIMITS, usedPercent: pct, note: 'usage counts are approximate; Cloudflare\'s dashboard is the exact figure',
           errors: { distinct: errs.length, total: errs.reduce((n, e) => n + e.n, 0), real: errs.filter(e => !e.test).length, list: errs.slice(0, 20).map(({ m, s, v, n, test, first, last }) => ({ m, at: s.split('\n').find(l => /:\d+:\d+/.test(l)) || '', v, n, test, first, last })) } });
+      }
+      if (p === '/transit/near' && req.method === 'GET') {   // routes and live departures near a point (Transit API); off until the TRANSIT_KEY secret is set
+        if (overCap(req, 'transit')) return tooMany(req, 'transit');
+        if (!ORIGINS.includes(req.headers.get('Origin') || '')) return json(req, { error: 'not allowed' }, 403);
+        if (!env.TRANSIT_KEY) return json(req, { enabled: false });
+        const lat = +url.searchParams.get('lat'), lon = +url.searchParams.get('lon');
+        if (!(Math.abs(lat) <= 90) || !(Math.abs(lon) <= 180) || (!lat && !lon)) return json(req, { error: 'bad request' }, 400);
+        const ck = new Request(`https://cache.safar/tr/${lat.toFixed(3)},${lon.toFixed(3)}`);   // one answer per ~100 m square for 90 s
+        const hit = await caches.default.match(ck); if (hit) { const r = new Response(hit.body, hit); Object.entries(cors(req)).forEach(([k, v]) => r.headers.set(k, v)); return r; }
+        const mk = 'transit:' + new Date().toISOString().slice(0, 7), used = +(await env.SAFAR.get(mk) || 0);
+        const minute = Math.floor(Date.now() / 60000); if (TRM.m !== minute) { TRM.m = minute; TRM.n = 0; }
+        if (used >= (+env.TRANSIT_MONTHLY || 1400) || TRM.n >= 4) { EV['transit:budget'] = (EV['transit:budget'] || 0) + 1; return json(req, { enabled: true, routes: [], busy: true }); }
+        TRM.n++; await env.SAFAR.put(mk, String(used + 1), { expirationTtl: 60 * 60 * 24 * 40 });
+        const r = await fetch(`https://external.transitapp.com/v3/public/nearby_routes?lat=${lat.toFixed(3)}&lon=${lon.toFixed(3)}&max_distance=600`, { headers: { apiKey: env.TRANSIT_KEY, 'Accept-Language': 'en' } });
+        EV['transit:call'] = (EV['transit:call'] || 0) + 1;
+        if (!r.ok) return json(req, { enabled: true, routes: [], error: 'transit ' + r.status }, 502);
+        const j = await r.json(), out = [];
+        for (const rt of j.routes || []) for (const it of rt.itineraries || []) {
+          const times = (it.schedule_items || []).map(x => ({ t: +x.departure_time, rt: !!x.is_real_time })).filter(x => x.t > Date.now() / 1000 - 60).slice(0, 3);
+          if (!times.length) continue;
+          out.push({ name: rt.route_short_name || rt.route_long_name || '', mode: rt.mode_name || '', color: /^[0-9a-f]{6}$/i.test(rt.route_color || '') ? rt.route_color : '', text: /^[0-9a-f]{6}$/i.test(rt.route_text_color || '') ? rt.route_text_color : '',
+            headsign: it.direction_headsign || '', stop: it.closest_stop?.stop_name || '', dist: +it.closest_stop?.distance || 0, times });
+        }
+        out.sort((a, b) => a.times[0].t - b.times[0].t);
+        const res = json(req, { enabled: true, routes: out.slice(0, 12), attribution: 'Powered by Transit' }); res.headers.set('Cache-Control', 'public, max-age=90'); later(caches.default.put(ck, res.clone())); return res;
       }
       if (p === '/hotel-rates' && req.method === 'POST') {    // live hotel prices for a city (LiteAPI); off until the LITEAPI_KEY secret is set
         if (overCap(req, 'hotel-rates')) return tooMany(req, 'hotel-rates');

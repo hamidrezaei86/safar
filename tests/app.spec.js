@@ -354,3 +354,17 @@ test('Safar Pro: a paid account unlocks the features and Settings shows the plan
   await page.click('#gear'); await expect(page.locator('#proBox')).toContainText('Safar Pro'); await expect(page.locator('#proBox')).toContainText('Renews');
   expect(errors).toEqual([]);
 });
+
+test('Transit: on a metro or bus leg, Go shows live departures near you with Transit credit; nothing when the server has no key', async ({ page }) => {
+  const errors = await offline(page);
+  let key = true;
+  await page.route('**/safar-api.hamid-ebb.workers.dev/transit/near**', r => r.fulfill({ contentType: 'application/json', body: JSON.stringify(key ? { enabled: true, routes: [{ name: 'M1', color: '0055aa', text: 'ffffff', headsign: 'Duomo', stop: 'Cairoli', dist: 140, times: [{ t: Date.now() / 1000 + 240, rt: true }] }] } : { enabled: false }) }));
+  await open(page);
+  const first = await page.evaluate(async () => { transitCard({ lm: 'metro' }, { lat: 45.468, lng: 9.18 }); await new Promise(r => setTimeout(r, 600)); return transitCard({ lm: 'metro' }, { lat: 45.468, lng: 9.18 }); });
+  expect(first).toContain('Departures near you'); expect(first).toContain('M1'); expect(first).toContain('4 min'); expect(first).toContain('Powered by Transit');
+  expect(await page.evaluate(() => transitCard({ lm: 'walk' }, { lat: 45.468, lng: 9.18 }))).toBe('');
+  key = false;
+  const off = await page.evaluate(async () => { TR.data = null; TR.key = ''; transitCard({ lm: 'bus' }, { lat: 40, lng: 10 }); await new Promise(r => setTimeout(r, 600)); return transitCard({ lm: 'bus' }, { lat: 40, lng: 10 }); });
+  expect(off).toBe('');
+  expect(errors).toEqual([]);
+});
