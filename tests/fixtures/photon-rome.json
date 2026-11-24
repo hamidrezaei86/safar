@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Point","coordinates":[12.4964,41.9028]},"properties":{"osm_id":41485,"osm_type":"R","osm_key":"place","osm_value":"city","type":"city","name":"Rome","state":"Lazio","country":"Italy","countrycode":"IT","extent":[12.23,42.14,12.85,41.65]}}]}

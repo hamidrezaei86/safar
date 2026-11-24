@@ -1,0 +1,38 @@
+# Builds the Safar iPhone/iPad app on a Mac in the cloud (no App Store upload, no signing).
+# Proves the app and its lock-screen widget compile, and keeps a Simulator copy you can open on any Mac.
+name: iOS build
+on:
+  push:
+    branches: [main]
+    paths: ['ios-app/**', 'index.html', '.github/workflows/ios-build.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: ios-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci
+      - run: npm run sync
+      - name: Build for iPhone and iPad (device, unsigned)
+        run: |
+          set -o pipefail
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release -destination 'generic/platform=iOS' -derivedDataPath build/device CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build | tail -40
+      - name: Build for the iOS Simulator
+        run: |
+          set -o pipefail
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -destination 'generic/platform=iOS Simulator' -derivedDataPath build/sim CODE_SIGNING_ALLOWED=NO build | tail -40
+      - name: Package the Simulator app
+        run: |
+          APP=$(find build/sim/Build/Products -name 'App.app' -maxdepth 2 | head -1)
+          ls "$APP/PlugIns" || true
+          cd "$(dirname "$APP")" && ditto -c -k --keepParent App.app "$GITHUB_WORKSPACE/Safar-simulator.zip"
+      - uses: actions/upload-artifact@v4
+        with: { name: Safar-iOS-simulator, path: Safar-simulator.zip, retention-days: 30 }

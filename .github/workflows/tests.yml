@@ -1,0 +1,29 @@
+# Runs the Safar test suite on every change, against the staging copy and the live page.
+name: Tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        page: ['', 'staging/']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm ci
+        working-directory: tests
+      - run: npx playwright install --with-deps chromium
+        working-directory: tests
+      - run: npx playwright test
+        working-directory: tests
+        env: { CI: '1', SAFAR_PAGE: '${{ matrix.page }}' }
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with: { name: 'report-${{ strategy.job-index }}', path: tests/playwright-report, retention-days: 14 }

@@ -1,0 +1,14 @@
+# Safar's server. Deployed automatically by Cloudflare (Workers Builds) when main changes; root directory: server
+name = "safar-api"
+main = "worker.js"
+compatibility_date = "2026-11-21"
+workers_dev = true
+account_id = "ebb451cce8a1ce4d745b22b6bc7f9898"
+keep_vars = true   # never wipe variables or secrets set in the dashboard (Stripe, LiteAPI)
+
+[[kv_namespaces]]
+binding = "SAFAR"
+id = "4ce4ec01a7aa4d7c87f5e21758a907f4"
+
+[observability]
+enabled = true

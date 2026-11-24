@@ -1,0 +1,19 @@
+{
+  "name": "safar-ios",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Safar iOS app (Capacitor wrapper around the Safar web app)",
+  "scripts": {
+    "copy-web": "node scripts/copy-web.js",
+    "sync": "npm run copy-web && npx cap sync ios",
+    "open": "npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/browser": "^8.0.5",
+    "@capacitor/cli": "^8.6.2",
+    "@capacitor/core": "^8.6.2",
+    "@capacitor/ios": "^8.6.2",
+    "@capacitor/local-notifications": "^8.3.1"
+  }
+}

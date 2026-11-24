@@ -1,0 +1,9 @@
+<!doctype html><meta charset="utf-8"><title>Safar — signing in</title>
+<body style="font:15px -apple-system,system-ui,sans-serif;display:grid;place-items:center;height:100vh;margin:0;color:#14204a">Signing you in…
+<script>
+// Sign-in callback: hands the result back to the Safar window that opened it, then closes.
+const q = new URLSearchParams(location.search), h = new URLSearchParams(location.hash.slice(1)), g = k => q.get(k) || h.get(k);
+const msg = { safarAuth: 1, code: g('code'), state: g('state'), error: g('error'), error_description: g('error_description'), id_token: g('id_token') };
+if (window.opener) { window.opener.postMessage(msg, location.origin); setTimeout(() => window.close(), 300); }
+else document.body.textContent = msg.error ? 'Sign-in failed: ' + (msg.error_description || msg.error) : 'Signed in — you can close this window.';
+</script></body>

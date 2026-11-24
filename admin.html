@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
+<title>Safar — owner dashboard</title>
+<link rel="icon" href="safar-icon-32.png">
+<style>
+body{font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#1d1d1f;background:#f5f6f4;margin:0;padding:20px}
+main{max-width:860px;margin:0 auto}h1{font-size:22px;margin:0 0 4px}h2{font-size:17px;margin:28px 0 8px}p.s{color:#5f6673;margin:0 0 16px}
+form{display:flex;gap:8px;margin:12px 0}input{flex:1;font:inherit;padding:10px 12px;border:1px solid #d5d9de;border-radius:10px}button{font:inherit;font-weight:600;padding:10px 16px;border:0;border-radius:10px;background:#0b7d70;color:#fff;cursor:pointer}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;font-variant-numeric:tabular-nums}th,td{text-align:right;padding:7px 10px;border-bottom:1px solid #eef0f2;font-size:13.5px}th:first-child,td:first-child{text-align:left}th{background:#f0f2f4;font-weight:600}
+.fb{background:#fff;border-radius:12px;padding:12px 14px;margin:8px 0}.fb small{color:#5f6673;display:block;margin-top:6px}.err{color:#b3261e}
+.tot{display:flex;flex-wrap:wrap;gap:10px}.tot div{background:#fff;border-radius:12px;padding:10px 14px;min-width:110px}.tot b{display:block;font-size:22px}.tot span{color:#5f6673;font-size:12.5px}
+</style></head><body><main>
+<h1>Safar — owner dashboard</h1>
+<p class="s">Anonymous use counts (no cookies, no IDs) and feedback sent from the app. Enter your admin key once; it stays in this browser.</p>
+<form id="f"><input id="k" type="password" placeholder="Admin key" autocomplete="current-password" aria-label="Admin key"><button>Show</button></form>
+<div id="out"></div>
+</main>
+<script>
+const API = 'https://safar-api.hamid-ebb.workers.dev', esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const COLS = [['Visits', d => d.ev?.open], ['Plans viewed', d => d.ev?.['step:plan']], ['Guided days', d => d.ev?.['step:go']], ['Sign-ins', d => (d.ev?.['signin:google'] || 0) + (d.ev?.['signin:microsoft'] || 0)], ['Shares', d => d.ev?.share], ['AI connector', d => d.ev?.['mcp:post']], ['Feedback', d => d.feedback], ['Server requests', d => d.requests]];
+async function load() {
+  const k = document.getElementById('k').value.trim(); if (!k) return; try { localStorage.setItem('safar_admin', k); } catch (e) {}
+  const out = document.getElementById('out'); out.textContent = 'Loading…';
+  try { const r = await fetch(API + '/admin?days=30', { headers: { 'X-Admin-Key': k } }); if (r.status === 403) throw new Error('That key is not right.'); const j = await r.json();
+    const sum = f => j.days.reduce((s, d) => s + (+f(d) || 0), 0), links = {};
+    j.days.forEach(d => Object.entries(d.ev || {}).forEach(([e, n]) => { if (e.startsWith('link:')) links[e.slice(5)] = (links[e.slice(5)] || 0) + n; }));
+    out.innerHTML = `<h2>Last 30 days</h2><div class="tot">${COLS.slice(0, 7).map(([n, f]) => `<div><b>${sum(f)}</b><span>${n}</span></div>`).join('')}</div>
+      <h2>By day</h2><table><thead><tr><th>Day</th>${COLS.map(c => `<th>${c[0]}</th>`).join('')}</tr></thead><tbody>${j.days.map(d => `<tr><td>${d.day}</td>${COLS.map(c => `<td>${+c[1](d) || ''}</td>`).join('')}</tr>`).join('')}</tbody></table>
+      <h2>Outside sites opened</h2>${Object.keys(links).length ? `<table><tbody>${Object.entries(links).sort((a, b) => b[1] - a[1]).map(([h, n]) => `<tr><td>${esc(h)}</td><td>${n}</td></tr>`).join('')}</tbody></table>` : '<p class="s">None yet.</p>'}
+      <h2>Feedback (${j.feedback.length})</h2>${j.feedback.map(f => `<div class="fb">${esc(f.m).replace(/\n/g, '<br>')}<small>${new Date(f.at).toLocaleString()}${f.mail ? ' · <a href="mailto:' + esc(f.mail) + '">' + esc(f.mail) + '</a>' : ''} · ${esc(f.step)} · ${f.cities} cities · ${esc(f.v)}</small></div>`).join('') || '<p class="s">No feedback yet.</p>'}`;
+  } catch (e) { out.innerHTML = `<p class="err">${esc(e.message || 'Could not load.')}</p>`; }
+}
+document.getElementById('f').onsubmit = e => { e.preventDefault(); load(); };
+try { const k = localStorage.getItem('safar_admin'); if (k) { document.getElementById('k').value = k; load(); } } catch (e) {}
+</script></body></html>

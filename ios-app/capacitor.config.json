@@ -1,0 +1,7 @@
+{
+  "appId": "com.amova.safar",
+  "appName": "Safar",
+  "webDir": "www",
+  "ios": { "contentInset": "never", "backgroundColor": "#0b1330", "limitsNavigationsToAppBoundDomains": false },
+  "plugins": { "CapacitorHttp": { "enabled": true } }
+}

@@ -1,0 +1,65 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Safar — your trip, planned day by day</title>
+<meta name="description" content="Safar plans each day of your trip — sights, hotel, meals and breaks — then guides you through it on the day. Free, in your browser.">
+<meta property="og:title" content="Safar — your trip, planned day by day"><meta property="og:description" content="Add your cities. Safar plans each day and walks it with you."><meta property="og:image" content="https://safar.amovasolutions.com/og.png"><meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="safar-icon-32.png"><link rel="apple-touch-icon" href="safar-icon-180.png">
+<style>
+:root{--ink:#14204a;--soft:#55607f;--paper:#f7f3ea;--line:#e3dccb;--teal:#0b7d70;--gold:#e9b04a;--navy:#0c1633}
+*{box-sizing:border-box}html,body{overflow-x:hidden}body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+a{color:var(--teal)}.wrap{max-width:1040px;margin:0 auto;padding:0 22px}
+header{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:24px;color:var(--ink);text-decoration:none}.brand img{width:40px;height:40px;border-radius:10px}.brand i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--gold);margin-left:2px}
+nav a{color:var(--soft);text-decoration:none;margin-left:18px;font-size:15px}
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center;padding:36px 0 64px}
+h1{font-size:clamp(38px,5.4vw,60px);line-height:1.04;letter-spacing:-.02em;margin:0 0 18px}
+.lead{font-size:20px;color:var(--soft);max-width:30em;margin:0 0 28px}
+.cta{display:inline-block;background:var(--teal);color:#fff;text-decoration:none;font-weight:700;padding:15px 26px;border-radius:14px;font-size:17px}.cta:hover{background:#086a5f}
+.note{display:block;margin-top:12px;color:var(--soft);font-size:14px}
+.phones{position:relative;height:560px}
+.phones img{position:absolute;width:250px;border-radius:30px;border:8px solid var(--navy);box-shadow:0 30px 60px -20px rgba(12,22,51,.45);background:#fff}
+.phones img:nth-child(1){left:0;top:40px;transform:rotate(-4deg)}.phones img:nth-child(2){left:150px;top:0;z-index:2}.phones img:nth-child(3){left:300px;top:60px;transform:rotate(4deg)}
+section{padding:56px 0;border-top:1px solid var(--line)}
+h2{font-size:30px;letter-spacing:-.01em;margin:0 0 26px}
+.steps{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(4,1fr);gap:22px;counter-reset:s}
+.steps li{counter-increment:s}.steps li::before{content:counter(s);display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--navy);color:#fff;font-weight:700;margin-bottom:10px}
+.steps b{display:block;font-size:18px;margin-bottom:4px}.steps p,.feat p{margin:0;color:var(--soft);font-size:15.5px}
+.feat{display:grid;grid-template-columns:repeat(3,1fr);gap:28px 34px}.feat b{display:block;margin-bottom:4px}
+.ai{background:var(--navy);color:#fff;border-radius:22px;padding:34px;display:grid;grid-template-columns:1.2fr .8fr;gap:24px;align-items:center}
+.ai h2{color:#fff;margin-bottom:10px}.ai p{color:#c9d0e6;margin:0}.ai code{background:rgba(255,255,255,.1);padding:8px 12px;border-radius:10px;display:block;font-size:14px;color:#fff;word-break:break-all}
+footer{padding:32px 0 60px;color:var(--soft);font-size:14px;border-top:1px solid var(--line)}footer a{color:var(--soft);margin-right:16px}
+.demo{display:grid;grid-template-columns:.9fr 1.1fr;gap:40px;align-items:center}.demo video{width:100%;max-width:300px;aspect-ratio:9/16;border-radius:30px;border:8px solid var(--navy);background:var(--navy);box-shadow:0 30px 60px -20px rgba(12,22,51,.45);justify-self:center}.demo p{color:var(--soft);margin:0 0 10px}
+@media (max-width:860px){.demo{grid-template-columns:1fr}}
+:focus-visible{outline:3px solid #2f6bff;outline-offset:2px;border-radius:6px}
+@media (max-width:860px){.hero{grid-template-columns:1fr}.phones{height:440px;max-width:460px}.phones img{width:200px}.phones img:nth-child(2){left:110px}.phones img:nth-child(3){left:220px}.steps{grid-template-columns:1fr 1fr}.feat{grid-template-columns:1fr}.ai{grid-template-columns:1fr}nav a:not(:last-child){display:none}}
+</style></head><body>
+<div class="wrap">
+<header><a class="brand" href="about.html"><img src="icon-192.png" alt="">safar<i></i></a><nav><a href="#how">How it works</a><a href="help.html">Help</a><a href="./">Open Safar</a></nav></header>
+<div class="hero">
+  <div>
+    <h1>Your trip, planned day by day.</h1>
+    <p class="lead">Add the cities you're visiting. Safar picks the sights worth your time, finds your bookings, and works out each day around opening hours, meals and breaks. On the day it walks you from stop to stop.</p>
+    <a class="cta" href="./">Open Safar</a>
+    <span class="note">Free. Works in your phone's browser — nothing to install.</span>
+  </div>
+  <div class="phones" aria-hidden="true"><img src="img/app-plan.jpg" alt=""><img src="img/app-day.jpg" alt=""><img src="img/app-go.jpg" alt=""></div>
+</div>
+<section id="demo"><div class="demo"><video src="img/safar-demo.mp4" poster="img/safar-demo-poster.jpg" controls playsinline preload="none" aria-label="Safar demo video, 30 seconds, with narration"></video><div><h2>See it in 30 seconds</h2><p>A two-city trip to Rome and Florence, from adding the cities to walking the first day.</p><p>Turn the sound on for the voiceover.</p></div></div></section>
+<section id="how"><h2>How it works</h2>
+<ol class="steps">
+  <li><b>Where</b><p>Add your cities and nights, and your flight or train. Signed in, Safar fills these in from your confirmation emails.</p></li>
+  <li><b>Explore and stay</b><p>Pick the sights you want from each city's best-known places, and choose a hotel or your Airbnb.</p></li>
+  <li><b>Plan</b><p>Safar orders each day so you don't double back, checks opening hours, and fits in lunch, dinner and coffee breaks.</p></li>
+  <li><b>Go</b><p>On the day, Safar guides you to the next stop and adjusts the rest of the day if you run late.</p></li>
+</ol></section>
+<section><h2>Made for the way you travel</h2>
+<div class="feat">
+  <div><b>Your bookings, found for you</b><p>Flights, trains, hotels and Airbnb stays come in from Gmail or Outlook. Emails are read on your phone, never stored on our server.</p></div>
+  <div><b>Your own pace</b><p>Set when your day starts and ends, how long lunch is and how often you want a break.</p></div>
+  <div><b>Travel together</b><p>Share a live trip: everyone with the link sees the same plan, and edits reach the others within about a minute.</p></div>
+  <div><b>Works offline</b><p>Save the map for your cities before you leave, and the plan and directions keep working with no signal.</p></div>
+  <div><b>In your calendar</b><p>One tap puts each day's stops into Google Calendar or Outlook, in the city's own time zone.</p></div>
+  <div><b>Five languages</b><p>English, French, Spanish, Farsi and Arabic.</p></div>
+</div></section>
+<section><div class="ai"><div><h2>Plan in Claude or ChatGPT</h2><p>Add Safar as a connector and ask for a trip in plain words. You get a day-by-day outline and a link that opens it in Safar.</p></div><code>https://safar-api.hamid-ebb.workers.dev/mcp</code></div></section>
+<footer><a href="help.html">Help</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="mailto:support@amovasolutions.com">Contact</a><br>Safar is made by Amova Solutions Inc., North Vancouver, British Columbia.</footer>
+</div></body></html>
