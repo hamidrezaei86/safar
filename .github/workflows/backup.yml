@@ -1,5 +1,5 @@
 # Every Sunday: encrypted off-site copy of users' trips, accounts and live trips, kept 90 days.
-# Needs one repository secret, BACKUP_KEY (encrypts the file; keep a copy in your password manager).
+# Needs no secret: each backup is locked with .github/backup-public-key.pem; only the private key Hamid keeps off GitHub opens it.
 # The server lets this job read its export because GitHub signs a token proving the request comes from this workflow on main.
 name: Backup
 on:
@@ -19,8 +19,6 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - run: node .github/scripts/backup.js
-        env:
-          BACKUP_KEY: ${{ secrets.BACKUP_KEY }}
       - uses: actions/upload-artifact@v4
         with: { name: 'safar-backup-${{ github.run_number }}', path: backup/, retention-days: 90 }
       - if: failure()
