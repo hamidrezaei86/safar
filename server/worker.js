@@ -177,10 +177,10 @@ export default {
         if (!r.ok) return json(req, { enabled: true, routes: [], error: 'transit ' + r.status }, 502);
         const j = await r.json(), out = [];
         for (const rt of j.routes || []) for (const it of rt.itineraries || []) {
-          const times = (it.schedule_items || []).map(x => ({ t: +x.departure_time, rt: !!x.is_real_time })).filter(x => x.t > Date.now() / 1000 - 60).slice(0, 3);
+          const times = (it.schedule_items || []).filter(x => !x.is_cancelled).map(x => ({ t: +x.departure_time, rt: !!x.is_real_time })).filter(x => x.t > Date.now() / 1000 - 60).slice(0, 3);
           if (!times.length) continue;
           out.push({ name: rt.route_short_name || rt.route_long_name || '', mode: rt.mode_name || '', color: /^[0-9a-f]{6}$/i.test(rt.route_color || '') ? rt.route_color : '', text: /^[0-9a-f]{6}$/i.test(rt.route_text_color || '') ? rt.route_text_color : '',
-            headsign: it.direction_headsign || '', stop: it.closest_stop?.stop_name || '', dist: +it.closest_stop?.distance || 0, times });
+            headsign: it.merged_headsign || it.headsign || it.direction_headsign || '', stop: it.closest_stop?.stop_name || '', dist: it.closest_stop?.stop_lat != null ? Math.round(Math.hypot((it.closest_stop.stop_lat - lat) * 111320, (it.closest_stop.stop_lon - lon) * 111320 * Math.cos(lat * Math.PI / 180))) : 0, times });
         }
         out.sort((a, b) => a.times[0].t - b.times[0].t);
         const res = json(req, { enabled: true, routes: out.slice(0, 12), attribution: 'Powered by Transit' }); res.headers.set('Cache-Control', 'public, max-age=90'); later(caches.default.put(ck, res.clone())); return res;
