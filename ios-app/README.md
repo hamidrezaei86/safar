@@ -78,3 +78,9 @@ While Go navigation runs, Safar shows the next stop, the next turn, the distance
 - First build: in Xcode, select the **SafarWidgets** target → Signing & Capabilities → pick the same Team as the App target. Bundle ID `com.amova.safar.widgets`.
 - People can switch it off in Settings → Safar → Live Activities.
 - Updates arrive while Safar is open (or just locked during navigation); the arrival countdown keeps ticking on the lock screen by itself.
+
+## Android
+
+The same project also builds the Android app (`android/`). Every change to the app is built in the cloud by GitHub Actions ("Android build"), which produces `Safar-Android.apk`: a test copy you can install straight onto an Android phone (allow "Install unknown apps" for the browser or Files app when asked). It is not on Google Play.
+
+Each cloud build is signed with a new test key, so to install a newer build, uninstall the old one first. Building locally: `npm run sync-android`, then open `android/` in Android Studio and press Run.
