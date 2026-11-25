@@ -1,6 +1,8 @@
 // Safar end-to-end tests (phone size, fully offline — see helpers.js)
 const { test, expect } = require('@playwright/test');
 const { offline, open } = require('./helpers');
+// Features that are on the staging copy only until they are published: their tests skip on the live page.
+const stagingOnly = () => test.skip(!/staging/.test(process.env.SAFAR_PAGE || ''), 'staging-only feature (not published yet)');
 
 async function skipWelcome(page) {
   await page.click('#welSkip');
@@ -310,6 +312,7 @@ test('iPhone Live Activity: Go navigation sends the next stop to the lock screen
 });
 
 test('leave-time reminders: the phone gets "Leave in 10 min for …" at the right moment in the city time zone', async ({ page }) => {
+  stagingOnly();
   const errors = await offline(page); await open(page); await demoTrip(page);
   await page.click('.step[data-step="plan"]'); await expect(page.locator('#planOut')).toContainText('Day 1');
   expect(await page.evaluate(() => zonedMs('2026-12-03', 600, 'Europe/Rome'))).toBe(Date.UTC(2026, 11, 3, 9, 0));
@@ -327,6 +330,7 @@ test('leave-time reminders: the phone gets "Leave in 10 min for …" at the righ
 });
 
 test('Safar Pro: free until payments are switched on; then Pro features open the paywall and buying goes to Stripe for this account', async ({ page }) => {
+  stagingOnly();
   const errors = await offline(page); await open(page); await demoTrip(page);
   await page.click('.step[data-step="plan"]'); await expect(page.locator('#planOut')).toContainText('Day 1');
   expect(await page.evaluate(() => isPro())).toBe(true);   // payments off → everything free
@@ -346,6 +350,7 @@ test('Safar Pro: free until payments are switched on; then Pro features open the
 });
 
 test('Safar Pro: a paid account unlocks the features and Settings shows the plan', async ({ page }) => {
+  stagingOnly();
   const errors = await offline(page);
   await page.route('**/safar-api.hamid-ebb.workers.dev/me/pro', r => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ pro: true, plan: 'year', until: Date.now() + 300 * 864e5 }) }));
   await open(page); await demoTrip(page);
@@ -356,6 +361,7 @@ test('Safar Pro: a paid account unlocks the features and Settings shows the plan
 });
 
 test('Transit: on a metro or bus leg, Go shows live departures near you with Transit credit; nothing when the server has no key', async ({ page }) => {
+  stagingOnly();
   const errors = await offline(page);
   let key = true;
   await page.route('**/safar-api.hamid-ebb.workers.dev/transit/near**', r => r.fulfill({ contentType: 'application/json', body: JSON.stringify(key ? { enabled: true, routes: [{ name: 'M1', color: '0055aa', text: 'ffffff', headsign: 'Duomo', stop: 'Cairoli', dist: 140, times: [{ t: Date.now() / 1000 + 240, rt: true }] }] } : { enabled: false }) }));
