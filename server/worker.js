@@ -163,7 +163,8 @@ export default {
       if (p === '/transit/near' && req.method === 'GET') {   // routes and live departures near a point (Transit API); off until the TRANSIT_KEY secret is set
         if (overCap(req, 'transit')) return tooMany(req, 'transit');
         if (!ORIGINS.includes(req.headers.get('Origin') || '')) return json(req, { error: 'not allowed' }, 403);
-        if (!env.TRANSIT_KEY) return json(req, { enabled: false });
+        const TKEY = env.TRANSIT_KEY || env.TRANSIENT_KEY;   // the dashboard saved it as TRANSIENT_KEY
+        if (!TKEY) return json(req, { enabled: false });
         const lat = +url.searchParams.get('lat'), lon = +url.searchParams.get('lon');
         if (!(Math.abs(lat) <= 90) || !(Math.abs(lon) <= 180) || (!lat && !lon)) return json(req, { error: 'bad request' }, 400);
         const ck = new Request(`https://cache.safar/tr/${lat.toFixed(3)},${lon.toFixed(3)}`);   // one answer per ~100 m square for 90 s
@@ -172,7 +173,7 @@ export default {
         const minute = Math.floor(Date.now() / 60000); if (TRM.m !== minute) { TRM.m = minute; TRM.n = 0; }
         if (used >= (+env.TRANSIT_MONTHLY || 1400) || TRM.n >= 4) { EV['transit:budget'] = (EV['transit:budget'] || 0) + 1; return json(req, { enabled: true, routes: [], busy: true }); }
         TRM.n++; await env.SAFAR.put(mk, String(used + 1), { expirationTtl: 60 * 60 * 24 * 40 });
-        const r = await fetch(`https://external.transitapp.com/v3/public/nearby_routes?lat=${lat.toFixed(3)}&lon=${lon.toFixed(3)}&max_distance=600`, { headers: { apiKey: env.TRANSIT_KEY, 'Accept-Language': 'en' } });
+        const r = await fetch(`https://external.transitapp.com/v3/public/nearby_routes?lat=${lat.toFixed(3)}&lon=${lon.toFixed(3)}&max_distance=600`, { headers: { apiKey: TKEY, 'Accept-Language': 'en' } });
         EV['transit:call'] = (EV['transit:call'] || 0) + 1;
         if (!r.ok) return json(req, { enabled: true, routes: [], error: 'transit ' + r.status }, 502);
         const j = await r.json(), out = [];
