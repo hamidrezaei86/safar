@@ -18,7 +18,7 @@ document.documentElement.lang = LANG; if (LANG === 'fa' || LANG === 'ar') docume
 </script>
 <script>
 // Error reporting: if something breaks on a phone, a short note (the error message and where in Safar's code it happened — never trip contents or account details) goes to the Safar server so it can be fixed. At most 5 notes per visit.
-window.SAFAR_V = '2026.11.24-1457-staging';
+window.SAFAR_V = '2026.11.24-2207-staging';
 (() => { const seen = new Set(); let n = 0; const URL0 = 'https://safar-api.hamid-ebb.workers.dev/err';
   const send = (m, st) => { try { m = String(m || '').slice(0, 300); if (!m || n >= 5 || seen.has(m) || /ResizeObserver loop|^Script error\.?$/.test(m)) return; seen.add(m); n++;
     const body = JSON.stringify({ m, s: String(st || '').split('\n').slice(0, 5).join('\n').slice(0, 700), v: window.SAFAR_V, t: /[?&]test=1/.test(location.search) ? 1 : 0, ua: navigator.userAgent.slice(0, 160) });
@@ -538,7 +538,7 @@ body.ro .add,body.ro [data-del],body.ro .x,body.ro .xs,body.ro [data-drop],body.
 .psheet table{width:100%;border-collapse:collapse}.psheet td{padding:5px 6px;border-bottom:1px solid #e5e5e5;vertical-align:top}.psheet td small{display:block;color:#666;font-size:10.5px}.psheet td i{color:#8a5300;font-style:normal;font-size:11px}
 .pt{width:46px;font-weight:700;white-space:nowrap}.pd{width:52px;text-align:right;color:#555;white-space:nowrap}.pn{display:inline-block;width:16px;height:16px;border-radius:50%;color:#fff;font-size:10px;font-weight:700;text-align:center;line-height:16px;margin-right:6px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .psheet footer{margin-top:8px;font-size:10px;color:#777}@page{margin:10mm}}
-.trcard{margin:10px 0;padding:10px 12px;border-radius:12px;background:var(--card,#fff);border:1px solid rgba(0,0,0,.08)}.trcard>b{display:block;margin-bottom:6px}.trrow{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid rgba(0,0,0,.06)}.trln{min-width:34px;text-align:center;font-weight:700;font-size:12px;padding:3px 6px;border-radius:6px}.trto{flex:1;font-size:14px;line-height:1.2}.trto small{display:block;color:var(--soft);font-size:12px}.trt{font-weight:700;font-size:13px;white-space:nowrap}.trt i{color:#0f9d7a;font-style:normal;margin-left:2px}.trby{display:block;margin-top:6px;color:var(--soft);font-size:11px}
+.trcard{margin:10px 0;padding:10px 12px;border-radius:12px;background:var(--card,#fff);border:1px solid rgba(0,0,0,.08)}.trcard>b{display:block;margin-bottom:6px}.trrow{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid rgba(0,0,0,.06)}.trln{min-width:34px;text-align:center;font-weight:700;font-size:12px;padding:3px 6px;border-radius:6px}.trto{flex:1;font-size:14px;line-height:1.2}.trto small{display:block;color:var(--soft);font-size:12px}.trt{font-weight:700;font-size:13px;white-space:nowrap}.trt i{color:#0f9d7a;font-style:normal;margin-left:2px}.trby{display:flex;align-items:center;gap:10px;margin-top:8px;color:var(--soft);font-size:11px}.trby img{display:block;height:28px;width:auto}
 </style>
 </head>
 <body>
@@ -2307,7 +2307,7 @@ function transitCard(rt, here) {
   if (!rt || (rt.lm !== 'metro' && rt.lm !== 'bus') || TR.off) return ''; transitFetch(here);
   const R = (TR.data?.routes || []).slice(0, 5); if (!R.length) return TR.data ? '<div class="navnote">No public transport departures found near you right now.</div>' : '';
   const now = Date.now() / 1000, mins = t => Math.max(0, Math.round((t - now) / 60));
-  return `<div class="trcard"><b>Departures near you</b>${R.map(r => `<div class="trrow"><span class="trln" style="background:#${esc(r.color || '444')};color:#${esc(r.text || 'fff')}">${esc(r.name)}</span><span class="trto">${esc(r.headsign || '')}<small>${esc(r.stop || '')}${r.dist ? ' · ' + fmtKm(r.dist) : ''}</small></span><span class="trt">${r.times.slice(0, 2).map(x => `${mins(x.t) ? mins(x.t) + ' min' : 'now'}${x.rt ? '<i title="live">•</i>' : ''}`).join(', ')}</span></div>`).join('')}<small class="trby">Powered by Transit · times can change</small></div>`;
+  return `<div class="trcard"><b>Departures near you</b>${R.map(r => `<div class="trrow"><span class="trln" style="background:#${esc(r.color || '444')};color:#${esc(r.text || 'fff')}">${esc(r.name)}</span><span class="trto">${esc(r.headsign || '')}<small>${esc(r.stop || '')}${r.dist ? ' · ' + fmtKm(r.dist) : ''}</small></span><span class="trt">${r.times.slice(0, 2).map(x => `${mins(x.t) ? mins(x.t) + ' min' : 'now'}${x.rt ? '<i title="live">•</i>' : ''}`).join(', ')}</span></div>`).join('')}<div class="trby"><img src="/img/powered-by-transit.svg" alt="Powered by Transit" width="112" height="37"><small>Times can change</small></div></div>`;
 }
 function navPanel() {
   const box = $('#navBox'); if (!box) return; const t = navTarget(), here = nav.here;
