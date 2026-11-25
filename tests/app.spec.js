@@ -399,3 +399,25 @@ test('Travel preferences: hotel and flight defaults are saved, shape the search 
   expect(r.fit).toBe(true); expect(r.nofit).toBe(false); expect(r.sum).toContain('4★ and up');
   expect(errors).toEqual([]);
 });
+
+test('Business trips and payment information: business details and cards (last 4 only) are kept on the device', async ({ page }) => {
+  stagingOnly();
+  const errors = await offline(page);
+  await open(page);
+  await page.evaluate(() => openBiz('biz'));
+  expect(await page.locator('#bz_company').count()).toBe(0);
+  await page.$eval('[data-bizon]', e => e.click());
+  await page.$eval('#bz_company', e => { e.value = 'Amova Solutions Inc.'; e.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.$eval('[data-btab="pay"]', e => e.click());
+  await page.$eval('[data-cadd]', e => e.click());
+  await page.$eval('#cdLabel', e => { e.value = 'Work Visa'; });
+  await page.$eval('#cdLast', e => { e.value = '4242424242424242'; e.dispatchEvent(new Event('input', { bubbles: true })); });
+  expect(await page.$eval('#cdLast', e => e.value)).toBe('4242');
+  await page.$eval('[data-csave]', e => e.click());
+  const biz = await page.evaluate(() => JSON.parse(localStorage.getItem('safar.biz')));
+  expect(biz.on).toBe(true); expect(biz.company).toBe('Amova Solutions Inc.');
+  expect(biz.cards).toEqual([{ label: 'Work Visa', last4: '4242', kind: 'visa', corp: true, dflt: true }]);
+  expect(JSON.stringify(biz)).not.toContain('42424242');
+  expect(await page.$eval('#paySum', e => e.textContent)).toContain('1 card');
+  expect(errors).toEqual([]);
+});

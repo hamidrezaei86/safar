@@ -18,7 +18,7 @@ document.documentElement.lang = LANG; if (LANG === 'fa' || LANG === 'ar') docume
 </script>
 <script>
 // Error reporting: if something breaks on a phone, a short note (the error message and where in Safar's code it happened — never trip contents or account details) goes to the Safar server so it can be fixed. At most 5 notes per visit.
-window.SAFAR_V = '2026.11.25-0048-staging';
+window.SAFAR_V = '2026.11.25-0053-staging';
 (() => { const seen = new Set(); let n = 0; const URL0 = 'https://safar-api.hamid-ebb.workers.dev/err';
   const send = (m, st) => { try { m = String(m || '').slice(0, 300); if (!m || n >= 5 || seen.has(m) || /ResizeObserver loop|^Script error\.?$/.test(m)) return; seen.add(m); n++;
     const body = JSON.stringify({ m, s: String(st || '').split('\n').slice(0, 5).join('\n').slice(0, 700), v: window.SAFAR_V, t: /[?&]test=1/.test(location.search) ? 1 : 0, ua: navigator.userAgent.slice(0, 160) });
@@ -541,6 +541,8 @@ body.ro .add,body.ro [data-del],body.ro .x,body.ro .xs,body.ro [data-drop],body.
 .trcard{margin:10px 0;padding:10px 12px;border-radius:12px;background:var(--card,#fff);border:1px solid rgba(0,0,0,.08)}.trcard>b{display:block;margin-bottom:6px}.trrow{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid rgba(0,0,0,.06)}.trln{min-width:34px;text-align:center;font-weight:700;font-size:12px;padding:3px 6px;border-radius:6px}.trto{flex:1;font-size:14px;line-height:1.2}.trto small{display:block;color:var(--soft);font-size:12px}.trt{font-weight:700;font-size:13px;white-space:nowrap}.trt i{color:#0f9d7a;font-style:normal;margin-left:2px}.trby{display:flex;align-items:center;gap:10px;margin-top:8px;color:var(--soft);font-size:11px}.trby img{display:block;height:28px;width:auto}
 .prefrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}.prefbtn{display:flex;align-items:center;gap:10px;text-align:left;background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:14px;padding:10px 12px;font:inherit;color:inherit;cursor:pointer;min-width:0}.prefbtn .pi{font-size:20px}.prefbtn .pt{flex:1;min-width:0}.prefbtn b{display:block;font-size:14px}.prefbtn small{display:block;color:var(--soft);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.prefbtn .pa{color:var(--soft);font-size:18px}
 .ptabs{display:flex;gap:6px;margin:4px 0 12px}.pf{margin:0 0 14px}.pf>label,.pf>.pl{display:block;font-weight:600;font-size:13px;margin-bottom:6px}.pf .seg{gap:6px}.pf .input{padding-left:14px}.pf .two{display:flex;gap:8px;align-items:center}.pf .two input{flex:1;min-width:0}.pf small.h{display:block;color:var(--soft);font-size:12px;margin-top:4px}.hfit{display:inline-block;margin-top:6px;font-size:12px;font-weight:600;color:#0f7a5f;background:#e5f4ee;border-radius:8px;padding:2px 8px}
+.tgl{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:14px;padding:12px 14px;margin-bottom:14px;cursor:pointer}.tgl b{display:block;font-size:15px}.tgl small{display:block;color:var(--soft);font-size:12.5px;margin-top:2px}.sw{flex:none;width:46px;height:28px;border-radius:14px;background:#d5d8dd;position:relative;transition:background .2s}.sw:after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}.tgl[aria-checked="true"] .sw{background:#0f9d7a}.tgl[aria-checked="true"] .sw:after{transform:translateX(18px)}
+.pcard{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:10px 12px;margin-bottom:8px}.pcard .pn{flex:1;min-width:0}.pcard b{display:block;font-size:14px}.pcard small{color:var(--soft);font-size:12px}.pcard .dflt{font-size:11px;font-weight:700;color:#0f7a5f;background:#e5f4ee;border-radius:6px;padding:2px 6px}.pf.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pf.grid2 .pf{margin:0}
 </style>
 </head>
 <body>
@@ -623,6 +625,8 @@ body.ro .add,body.ro [data-del],body.ro .x,body.ro .xs,body.ro [data-drop],body.
   <div class="lbl">Your stamina</div><div class="seg" id="stamPref"></div>
   <div class="lbl">Travel preferences</div>
   <div class="prefrow"><button class="prefbtn" id="prefHotels"><span class="pi">🏨</span><span class="pt"><b>Hotels</b><small id="prefHotelSum">Any</small></span><span class="pa">›</span></button><button class="prefbtn" id="prefFlights"><span class="pi">✈️</span><span class="pt"><b>Flights</b><small id="prefFlightSum">Any</small></span><span class="pa">›</span></button></div>
+  <div class="lbl">Business and payments</div>
+  <div class="prefrow"><button class="prefbtn" id="bizOpen"><span class="pi">💼</span><span class="pt"><b>Business trips</b><small id="bizSum">Off</small></span><span class="pa">›</span></button><button class="prefbtn" id="payOpen"><span class="pi">💳</span><span class="pt"><b>Payment information</b><small id="paySum">Free plan</small></span><span class="pa">›</span></button></div>
   <div class="lbl">Leave-time reminders</div><div class="seg" id="remPref"></div><p class="remnote" id="remNote"></p>
   <div class="lbl">AI engine</div>
   <div class="aieng"><div class="seg" id="aiPick"><button class="pill sm" data-aip="claude"><img src="https://www.google.com/s2/favicons?domain=claude.ai&sz=64" alt=""> Claude</button><button class="pill sm" data-aip="openai"><img src="https://www.google.com/s2/favicons?domain=chatgpt.com&sz=64" alt=""> ChatGPT</button></div>
@@ -649,6 +653,7 @@ body.ro .add,body.ro [data-del],body.ro .x,body.ro .xs,body.ro [data-drop],body.
 <div class="sheet" id="askSheet"><div class="in" id="askIn"></div></div>
 <div class="sheet" id="impSheet"><div class="in" id="impIn"></div></div>
 <div class="sheet" id="shareSheet"><div class="in" id="shareIn"></div></div>
+<div class="sheet" id="bizSheet"><div class="in" id="bizIn"></div></div>
 <div class="sheet" id="prefSheet"><div class="in" id="prefIn"></div></div>
 <div class="sheet" id="proSheet"><div class="in" id="proIn"></div></div>
 <div class="sheet" id="fbSheet"><div class="in" id="fbIn"></div></div>
@@ -3438,7 +3443,7 @@ function openPaywall(feat) { const signed = !!cloudSess(), st = proState();
     <div style="margin-top:14px"><button class="cta ghost" data-close>Not now</button></div>`;
   $('#proSheet').classList.add('on'); track('paywall:' + (feat || 'open')); }
 $('#proIn').addEventListener('click', e => { const b = e.target.closest('[data-buy]'); if (!b) return; track('buy:' + b.dataset.buy); location.href = payUrl(b.dataset.buy); });
-function renderPro() { const box = $('#proBox'); if (!box) return; if (!PAY.year && !proState().until) { box.innerHTML = ''; return; } const st = proState(), on = (st.until || 0) > Date.now();
+function renderPro() { try { renderBizSum(); } catch (e) {} const box = $('#proBox'); if (!box) return; if (!PAY.year && !proState().until) { box.innerHTML = ''; return; } const st = proState(), on = (st.until || 0) > Date.now();
   const until = on ? new Date(st.until).toLocaleDateString(LOC, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
   box.innerHTML = `<div class="probox"><div><b>${on ? 'Safar Pro' : 'Safar Free'}</b><small>${on ? (st.plan === 'year' ? (st.canceled ? `Ends ${until}` : `Renews ${until}`) : `Trip Pass until ${until}`) : 'Offline maps, live editing, calendar sync and more with Pro'}</small></div>${on ? (st.plan === 'year' && PAY.portal ? `<a class="mini" href="${esc(PAY.portal)}" target="_blank" rel="noopener">Manage</a>` : '') : `<button class="mini teal" data-pro>See Pro</button>`}</div>`; }
 document.addEventListener('click', e => { if (e.target.closest('[data-pro]')) { $('#setSheet').classList.remove('on'); openPaywall(); } });
@@ -3446,6 +3451,58 @@ document.addEventListener('click', e => { if (e.target.closest('[data-pro]')) { 
   history.replaceState(null, '', location.pathname + location.search.replace(/[?&]pro=done/, '').replace(/^&/, '?') + location.hash); toast('Thanks! Turning on Safar Pro…');
   for (let i = 0; i < 20; i++) { await sleep(3000); const j = await refreshPro(); if (j.pro) { toast('⭐ Safar Pro is on'); renderPro(); return; } }
   toast('Payment received. Pro will turn on shortly; reopen Settings in a minute'); })();
+// ---- business use and payment information: kept on this device; used for business-trip expense reports (#70) ----
+const BIZ_KEY = 'safar.biz', BIZ0 = { on: false, company: '', address: '', country: '', taxId: '', costCentre: '', employeeId: '', purpose: '', approver: '', currency: '', cards: [] };
+let BIZ = (() => { try { return { ...BIZ0, ...JSON.parse(localStorage.getItem(BIZ_KEY) || '{}') }; } catch (e) { return { ...BIZ0 }; } })();
+function saveBiz() { try { localStorage.setItem(BIZ_KEY, JSON.stringify(BIZ)); } catch (e) {} renderBizSum(); }
+function renderBizSum() { const a = $('#bizSum'), b = $('#paySum'); if (a) a.textContent = BIZ.on ? (BIZ.company.trim() || 'On — add your company') : 'Off';
+  if (b) { const st = proState(), on = (st.until || 0) > Date.now(); b.textContent = (on ? 'Safar Pro' : 'Free plan') + (BIZ.cards.length ? ` · ${BIZ.cards.length} card${BIZ.cards.length > 1 ? 's' : ''}` : ''); } }
+const CARD_KIND = [['visa', 'Visa'], ['mc', 'Mastercard'], ['amex', 'Amex'], ['other', 'Other']];
+let bizTab = 'biz', cardDraft = null;
+function openBiz(tab) { bizTab = tab || bizTab; cardDraft = null; renderBiz(); $('#setSheet').classList.remove('on'); $('#bizSheet').classList.add('on'); }
+function renderBiz() { let h = `<div class="ptabs"><button class="pill sm ${bizTab === 'biz' ? 'on' : ''}" data-btab="biz">💼 Business trips</button><button class="pill sm ${bizTab === 'pay' ? 'on' : ''}" data-btab="pay">💳 Payment information</button></div>`;
+  const fld = (k, label, ph, extra = '') => `<div class="pf"><label for="bz_${k}">${label}</label><input class="input" id="bz_${k}" data-bz="${k}" placeholder="${esc(ph)}" value="${esc(BIZ[k] || '')}" ${extra}></div>`;
+  if (bizTab === 'biz') {
+    h += `<h2>Business trips</h2><div class="tgl" role="switch" tabindex="0" aria-checked="${BIZ.on}" data-bizon><div><b>I may use Safar for business trips</b><small>Lets you mark a trip as business and get an expense report with receipts</small></div><span class="sw"></span></div>`;
+    if (BIZ.on) h += `<p style="color:var(--soft);font-size:13.5px;margin:-4px 0 12px">These go on the header of your expense reports. They stay on this device.</p>
+      ${fld('company', 'Company name', 'e.g. Amova Solutions Inc.', 'autocomplete="organization"')}
+      <div class="pf"><label for="bz_address">Company address</label><textarea class="input" id="bz_address" data-bz="address" rows="2" placeholder="Street, city, province or state, postal code" style="resize:vertical">${esc(BIZ.address)}</textarea></div>
+      <div class="pf grid2"><div>${fld('country', 'Country', 'e.g. Canada', 'autocomplete="country-name"')}</div><div>${fld('taxId', 'Tax / GST number', 'Optional')}</div></div>
+      <div class="pf grid2"><div>${fld('costCentre', 'Cost centre', 'Optional')}</div><div>${fld('employeeId', 'Employee ID', 'Optional')}</div></div>
+      ${fld('purpose', 'Usual purpose of business trips', 'e.g. Client meetings')}
+      ${fld('approver', 'Send reports to (approver or accounts)', 'name@company.com', 'type="email" inputmode="email"')}
+      <div class="pf"><span class="pl">Report currency</span><div class="seg">${[['', 'Trip currency'], ...['CAD', 'USD', 'EUR', 'GBP'].map(c => [c, c])].map(([v, n]) => `<button class="pill sm ${BIZ.currency === v ? 'on' : ''}" data-bzcur="${v}">${n}</button>`).join('')}</div></div>`;
+  } else {
+    const st = proState(), on = (st.until || 0) > Date.now(), until = on ? new Date(st.until).toLocaleDateString(LOC, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+    h += `<h2>Payment information</h2><div class="pf"><span class="pl">Your plan</span><div class="pcard"><span style="font-size:20px">${on ? '⭐' : '🧭'}</span><div class="pn"><b>${on ? 'Safar Pro' : 'Safar Free'}</b><small>${on ? (st.plan === 'year' ? (st.canceled ? `Ends ${until}` : `Renews ${until} · US$29.99 a year`) : `Trip Pass until ${until}`) : (PAY.year ? 'Upgrade any time' : 'Every feature is free for now')}</small></div>${on && PAY.portal ? `<a class="mini" href="${esc(PAY.portal)}" target="_blank" rel="noopener">Manage billing</a>` : (!on && PAY.year ? '<button class="mini teal" data-pro>See Pro</button>' : '')}</div>
+      <small class="h">${on && PAY.portal ? 'Manage billing opens Stripe, where you can change your card, download invoices and receipts, or cancel.' : 'Safar Pro is paid through Stripe. Safar never sees or stores your card number.'}</small></div>
+      <div class="pf"><span class="pl">Cards you pay for trips with</span><small class="h" style="margin:-2px 0 8px">So expense reports can show which card paid. Only a name and the last 4 digits are kept, on this device.</small>
+      ${BIZ.cards.map((c, i) => `<div class="pcard"><span style="font-size:20px">💳</span><div class="pn"><b>${esc(c.label)}</b><small>${esc((CARD_KIND.find(k => k[0] === c.kind) || CARD_KIND[3])[1])} ···· ${esc(c.last4)}${c.corp ? ' · Company card' : ''}</small></div>${c.dflt ? '<span class="dflt">Default</span>' : `<button class="mini" data-cdef="${i}">Make default</button>`}<button class="mini" data-cdel="${i}" aria-label="Remove ${esc(c.label)}">Remove</button></div>`).join('') || '<p style="color:var(--soft);font-size:13.5px;margin:0 0 8px">No cards added.</p>'}
+      ${cardDraft ? `<div class="pcard" style="display:block"><div class="pf grid2" style="margin-bottom:8px"><div><label for="cdLabel">Name</label><input class="input" id="cdLabel" placeholder="e.g. Work Visa" value="${esc(cardDraft.label)}"></div><div><label for="cdLast">Last 4 digits</label><input class="input" id="cdLast" inputmode="numeric" maxlength="4" placeholder="1234" value="${esc(cardDraft.last4)}" autocomplete="off"></div></div>
+        <div class="seg" style="margin-bottom:8px">${CARD_KIND.map(([k, n]) => `<button class="pill sm ${cardDraft.kind === k ? 'on' : ''}" data-ckind="${k}">${n}</button>`).join('')}</div>
+        <label style="display:flex;gap:8px;align-items:center;font-size:14px;margin-bottom:10px"><input type="checkbox" id="cdCorp" ${cardDraft.corp ? 'checked' : ''}> Company card</label>
+        <div style="display:flex;gap:8px"><button class="cta" data-csave style="flex:1">Add card</button><button class="pill" data-ccancel>Cancel</button></div></div>` : '<button class="pill" data-cadd>+ Add a card</button>'}</div>`;
+  }
+  h += `<div style="margin-top:6px"><button class="cta" data-bdone style="width:100%">Done</button></div>`;
+  $('#bizIn').innerHTML = h; }
+$('#bizOpen').onclick = () => openBiz('biz'); $('#payOpen').onclick = () => openBiz('pay');
+$('#bizIn').addEventListener('click', e => { const q = s => e.target.closest(s);
+  if (q('[data-btab]')) { bizTab = q('[data-btab]').dataset.btab; cardDraft = null; renderBiz(); return; }
+  if (q('[data-bizon]')) { BIZ.on = !BIZ.on; saveBiz(); renderBiz(); return; }
+  if (q('[data-bzcur]')) { BIZ.currency = q('[data-bzcur]').dataset.bzcur; saveBiz(); renderBiz(); return; }
+  if (q('[data-cadd]')) { cardDraft = { label: '', last4: '', kind: 'visa', corp: BIZ.on }; renderBiz(); $('#cdLabel')?.focus(); return; }
+  if (q('[data-ccancel]')) { cardDraft = null; renderBiz(); return; }
+  if (q('[data-ckind]')) { cardDraft.label = $('#cdLabel').value; cardDraft.last4 = $('#cdLast').value; cardDraft.corp = $('#cdCorp').checked; cardDraft.kind = q('[data-ckind]').dataset.ckind; renderBiz(); return; }
+  if (q('[data-csave]')) { const label = $('#cdLabel').value.trim(), last4 = $('#cdLast').value.replace(/\D/g, '');
+    if (last4.length !== 4) { toast('Enter only the last 4 digits of the card'); $('#cdLast').focus(); return; }
+    BIZ.cards.push({ label: label || 'Card', last4, kind: cardDraft.kind, corp: $('#cdCorp').checked, dflt: !BIZ.cards.length }); cardDraft = null; saveBiz(); renderBiz(); return; }
+  if (q('[data-cdef]')) { const i = +q('[data-cdef]').dataset.cdef; BIZ.cards.forEach((c, j) => c.dflt = j === i); saveBiz(); renderBiz(); return; }
+  if (q('[data-cdel]')) { const i = +q('[data-cdel]').dataset.cdel, was = BIZ.cards[i].dflt; BIZ.cards.splice(i, 1); if (was && BIZ.cards[0]) BIZ.cards[0].dflt = true; saveBiz(); renderBiz(); return; }
+  if (q('[data-bdone]')) { $('#bizSheet').classList.remove('on'); $('#setSheet').classList.add('on'); }
+});
+$('#bizIn').addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && e.target.closest('[data-bizon]')) { e.preventDefault(); e.target.closest('[data-bizon]').click(); } });
+$('#bizIn').addEventListener('input', e => { const i = e.target.closest('[data-bz]'); if (i) { BIZ[i.dataset.bz] = i.value; saveBiz(); return; } if (e.target.id === 'cdLast') e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4); });
+renderBizSum();
 // ---- leave-time reminders: "Leave in 10 min for the Colosseum" on trip days ----
 // In the iOS app they are scheduled with the phone (they arrive even when Safar is closed); on the web they arrive while Safar is open.
 const REM_OPT = [[0, 'Off'], [5, '5 min before'], [10, '10 min before'], [15, '15 min before']];
