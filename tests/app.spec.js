@@ -374,3 +374,28 @@ test('Transit: on a metro or bus leg, Go shows live departures near you with Tra
   expect(off).toBe('');
   expect(errors).toEqual([]);
 });
+
+test('Travel preferences: hotel and flight defaults are saved, shape the search links, and mark hotels that fit', async ({ page }) => {
+  stagingOnly();
+  const errors = await offline(page);
+  await open(page);
+  await page.evaluate(() => openPrefs('hotel'));
+  await page.$eval('#prefIn [data-ps="hotel.stars"][data-v="4"]', e => e.click());
+  await page.$eval('#prefIn [data-pi="hotel.max"]', (e, v) => { e.value = v; e.dispatchEvent(new Event('input', { bubbles: true })); }, '300');
+  await page.$eval('#prefIn [data-pam="breakfast"]', e => e.click());
+  await page.$eval('#prefIn [data-ptab="flight"]', e => e.click());
+  await page.$eval('#prefIn [data-ps="flight.cabin"][data-v="business"]', e => e.click());
+  await page.$eval('#prefIn [data-ps="flight.stops"][data-v="0"]', e => e.click());
+  await page.$eval('#prefIn [data-pi="flight.airlines"]', (e, v) => { e.value = v; e.dispatchEvent(new Event('input', { bubbles: true })); }, 'Air Canada');
+  const r = await page.evaluate(() => ({
+    saved: JSON.parse(localStorage.getItem('safar.prefs')),
+    book: decodeURIComponent(bookingFilters()),
+    fly: flightPrefWords(),
+    fit: hotelFits({ name: 'A', stars: 4, kind: 'hotel', rate: { night: 250 } }), nofit: hotelFits({ name: 'B', stars: 3, kind: 'hotel' }),
+    sum: document.querySelector('#prefHotelSum').textContent }));
+  expect(r.saved.hotel.stars).toBe(4); expect(r.saved.flight.cabin).toBe('business');
+  expect(r.book).toContain('class=4'); expect(r.book).toContain('class=5'); expect(r.book).toContain('mealplan=1'); expect(r.book).toMatch(/price=\w+-0-300-1/);
+  expect(r.fly).toContain('business class'); expect(r.fly).toContain('nonstop'); expect(r.fly).toContain('on Air Canada');
+  expect(r.fit).toBe(true); expect(r.nofit).toBe(false); expect(r.sum).toContain('4★ and up');
+  expect(errors).toEqual([]);
+});

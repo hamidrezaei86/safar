@@ -18,7 +18,7 @@ document.documentElement.lang = LANG; if (LANG === 'fa' || LANG === 'ar') docume
 </script>
 <script>
 // Error reporting: if something breaks on a phone, a short note (the error message and where in Safar's code it happened — never trip contents or account details) goes to the Safar server so it can be fixed. At most 5 notes per visit.
-window.SAFAR_V = '2026.11.24-2317-staging';
+window.SAFAR_V = '2026.11.25-0048-staging';
 (() => { const seen = new Set(); let n = 0; const URL0 = 'https://safar-api.hamid-ebb.workers.dev/err';
   const send = (m, st) => { try { m = String(m || '').slice(0, 300); if (!m || n >= 5 || seen.has(m) || /ResizeObserver loop|^Script error\.?$/.test(m)) return; seen.add(m); n++;
     const body = JSON.stringify({ m, s: String(st || '').split('\n').slice(0, 5).join('\n').slice(0, 700), v: window.SAFAR_V, t: /[?&]test=1/.test(location.search) ? 1 : 0, ua: navigator.userAgent.slice(0, 160) });
@@ -539,6 +539,8 @@ body.ro .add,body.ro [data-del],body.ro .x,body.ro .xs,body.ro [data-drop],body.
 .pt{width:46px;font-weight:700;white-space:nowrap}.pd{width:52px;text-align:right;color:#555;white-space:nowrap}.pn{display:inline-block;width:16px;height:16px;border-radius:50%;color:#fff;font-size:10px;font-weight:700;text-align:center;line-height:16px;margin-right:6px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .psheet footer{margin-top:8px;font-size:10px;color:#777}@page{margin:10mm}}
 .trcard{margin:10px 0;padding:10px 12px;border-radius:12px;background:var(--card,#fff);border:1px solid rgba(0,0,0,.08)}.trcard>b{display:block;margin-bottom:6px}.trrow{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid rgba(0,0,0,.06)}.trln{min-width:34px;text-align:center;font-weight:700;font-size:12px;padding:3px 6px;border-radius:6px}.trto{flex:1;font-size:14px;line-height:1.2}.trto small{display:block;color:var(--soft);font-size:12px}.trt{font-weight:700;font-size:13px;white-space:nowrap}.trt i{color:#0f9d7a;font-style:normal;margin-left:2px}.trby{display:flex;align-items:center;gap:10px;margin-top:8px;color:var(--soft);font-size:11px}.trby img{display:block;height:28px;width:auto}
+.prefrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}.prefbtn{display:flex;align-items:center;gap:10px;text-align:left;background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:14px;padding:10px 12px;font:inherit;color:inherit;cursor:pointer;min-width:0}.prefbtn .pi{font-size:20px}.prefbtn .pt{flex:1;min-width:0}.prefbtn b{display:block;font-size:14px}.prefbtn small{display:block;color:var(--soft);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.prefbtn .pa{color:var(--soft);font-size:18px}
+.ptabs{display:flex;gap:6px;margin:4px 0 12px}.pf{margin:0 0 14px}.pf>label,.pf>.pl{display:block;font-weight:600;font-size:13px;margin-bottom:6px}.pf .seg{gap:6px}.pf .input{padding-left:14px}.pf .two{display:flex;gap:8px;align-items:center}.pf .two input{flex:1;min-width:0}.pf small.h{display:block;color:var(--soft);font-size:12px;margin-top:4px}.hfit{display:inline-block;margin-top:6px;font-size:12px;font-weight:600;color:#0f7a5f;background:#e5f4ee;border-radius:8px;padding:2px 8px}
 </style>
 </head>
 <body>
@@ -619,6 +621,8 @@ body.ro .add,body.ro [data-del],body.ro .x,body.ro .xs,body.ro [data-drop],body.
   <div id="proBox"></div>
   <div class="lbl">Food you love</div><div class="seg" id="foodPref"></div>
   <div class="lbl">Your stamina</div><div class="seg" id="stamPref"></div>
+  <div class="lbl">Travel preferences</div>
+  <div class="prefrow"><button class="prefbtn" id="prefHotels"><span class="pi">🏨</span><span class="pt"><b>Hotels</b><small id="prefHotelSum">Any</small></span><span class="pa">›</span></button><button class="prefbtn" id="prefFlights"><span class="pi">✈️</span><span class="pt"><b>Flights</b><small id="prefFlightSum">Any</small></span><span class="pa">›</span></button></div>
   <div class="lbl">Leave-time reminders</div><div class="seg" id="remPref"></div><p class="remnote" id="remNote"></p>
   <div class="lbl">AI engine</div>
   <div class="aieng"><div class="seg" id="aiPick"><button class="pill sm" data-aip="claude"><img src="https://www.google.com/s2/favicons?domain=claude.ai&sz=64" alt=""> Claude</button><button class="pill sm" data-aip="openai"><img src="https://www.google.com/s2/favicons?domain=chatgpt.com&sz=64" alt=""> ChatGPT</button></div>
@@ -645,6 +649,7 @@ body.ro .add,body.ro [data-del],body.ro .x,body.ro .xs,body.ro [data-drop],body.
 <div class="sheet" id="askSheet"><div class="in" id="askIn"></div></div>
 <div class="sheet" id="impSheet"><div class="in" id="impIn"></div></div>
 <div class="sheet" id="shareSheet"><div class="in" id="shareIn"></div></div>
+<div class="sheet" id="prefSheet"><div class="in" id="prefIn"></div></div>
 <div class="sheet" id="proSheet"><div class="in" id="proIn"></div></div>
 <div class="sheet" id="fbSheet"><div class="in" id="fbIn"></div></div>
 <div class="sheet" id="welSheet"><div class="in" id="welIn"></div></div>
@@ -1232,7 +1237,7 @@ function renderWhere() {
 function hubChips(c, mode, which, legId, sel) { const list = S.hubs?.[c.id + ':' + mode]; if (!list) return '<span class="hub">finding…</span>'; if (!list.length) return `<span class="hub">${esc(c.name)}</span>`;
   return `<span class="hubwrap">${list.map(h => `<button class="hub ${sel && sel.name === h.name ? 'on' : ''}" data-hub="${legId}" data-w="${which}" data-n="${esc(h.name)}" title="${esc(h.addr)}">${esc(h.name.replace(/^(Lisboa|Porto|Roma|Madrid|Milano|Paris)\s*[-–]\s*/, ''))}</button>`).join('')}</span>`; }
 function ticketUrl(L) { const d = tripDates()[dayIndexOfCity(L.to.id)] || ''; const a = encodeURIComponent(L.from.name), b = encodeURIComponent(L.to.name);
-  if (L.mode === 'flight') return `https://www.google.com/travel/flights?q=${encodeURIComponent(`Flights from ${L.from.name} to ${L.to.name} on ${d}`)}`;
+  if (L.mode === 'flight') return `https://www.google.com/travel/flights?q=${encodeURIComponent(`Flights from ${L.from.name} to ${L.to.name} on ${d} ${flightPrefWords()}`.trim())}`;
   if (L.mode === 'car') return `https://www.google.com/maps/dir/?api=1&origin=${L.from.lat},${L.from.lng}&destination=${L.to.lat},${L.to.lng}&travelmode=driving`;
   return `https://www.rome2rio.com/map/${a}/${b}`; }
 function dayIndexOfCity(cid) { let n = 0; for (const c of cities()) { if (c.id === cid) return n; n += nightsOf(c); } return 0; }
@@ -1575,8 +1580,77 @@ async function addAirbnb() {
   addPlace({ name: nm ? 'Airbnb · ' + nm : 'Your Airbnb', lat: g.lat, lng: g.lng, type: 'base', emoji: '🏡', city: cid, airbnb: true, addr, booked: true }); Object.assign(abDraft, { open: false, addr: '', name: '' });
   changed(); renderStay(); drawStay(); renderFoot(); toast('🏡 Your Airbnb is your base in ' + cur().name);
 }
+// ---- travel preferences: hotel and flight defaults on this device, used by every hotel and flight search ----
+const PREF_KEY = 'safar.prefs', PREF0 = { hotel: { stars: 0, min: '', max: '', am: [], type: 'any', chains: '', loyalty: '' }, flight: { home: '', cabin: 'economy', stops: 'any', bags: '1', seat: 'any', airlines: '', avoid: '', alliance: 'any', time: 'any' } };
+let PREF = (() => { try { const j = JSON.parse(localStorage.getItem(PREF_KEY) || 'null'); if (j) return { hotel: { ...PREF0.hotel, ...j.hotel }, flight: { ...PREF0.flight, ...j.flight } }; } catch (e) {} return JSON.parse(JSON.stringify(PREF0)); })();
+const AMEN = [['breakfast', '🍳 Breakfast', 'mealplan=1'], ['cancel', '↩️ Free cancellation', 'fc=2'], ['wifi', '📶 Wi-Fi', 'hotelfacility=107'], ['parking', '🅿️ Parking', 'hotelfacility=2'], ['pool', '🏊 Pool', 'hotelfacility=433'], ['gym', '🏋️ Gym', 'hotelfacility=11'], ['spa', '💆 Spa', 'hotelfacility=54'], ['ac', '❄️ Air conditioning', 'hotelfacility=109'], ['pets', '🐾 Pets allowed', 'hotelfacility=4'], ['kitchen', '🍽️ Kitchen', ''], ['access', '♿ Accessible', '']];
+const HTYPES = [['any', 'Any'], ['hotel', 'Hotel', 204], ['apartment', 'Apartment', 201], ['bnb', 'B&B / guesthouse', 208], ['hostel', 'Hostel', 203]];
+const CABIN = [['economy', 'Economy'], ['premium', 'Premium economy'], ['business', 'Business'], ['first', 'First']];
+const FTIME = [['any', 'Any time'], ['morning', 'Morning'], ['afternoon', 'Afternoon'], ['evening', 'Evening'], ['noredeye', 'No red-eyes']];
+function savePref() { try { localStorage.setItem(PREF_KEY, JSON.stringify(PREF)); } catch (e) {} renderPrefSum(); }
+const hotelPrefSet = () => { const H = PREF.hotel; return !!(H.stars || H.min || H.max || H.am.length || H.type !== 'any' || H.chains.trim()); };
+function hotelPrefText() { const H = PREF.hotel, c = myCurrency(), t = [];
+  if (H.stars) t.push(H.stars + '★ and up'); if (H.min || H.max) t.push(H.min && H.max ? `${money(+H.min, c)}–${money(+H.max, c)}/night` : H.max ? `up to ${money(+H.max, c)}/night` : `from ${money(+H.min, c)}/night`);
+  if (H.type !== 'any') t.push(HTYPES.find(x => x[0] === H.type)[1]); H.am.forEach(a => { const m = AMEN.find(x => x[0] === a); if (m) t.push(m[1].replace(/^\S+\s/, '')); }); if (H.chains.trim()) t.push(H.chains.trim());
+  return t.join(' · '); }
+function flightPrefText() { const F = PREF.flight, t = [];
+  if (F.home.trim()) t.push('From ' + F.home.trim().toUpperCase()); t.push(CABIN.find(x => x[0] === F.cabin)[1]); if (F.stops === '0') t.push('Nonstop'); if (F.stops === '1') t.push('1 stop max');
+  t.push(F.bags === '0' ? 'No checked bag' : F.bags + ' checked bag' + (F.bags === '1' ? '' : 's')); if (F.seat !== 'any') t.push(F.seat === 'aisle' ? 'Aisle' : 'Window');
+  if (F.airlines.trim()) t.push(F.airlines.trim()); if (F.alliance !== 'any') t.push(F.alliance); if (F.time !== 'any') t.push(FTIME.find(x => x[0] === F.time)[1]); return t.join(' · '); }
+function renderPrefSum() { const a = $('#prefHotelSum'), b = $('#prefFlightSum'); if (a) a.textContent = hotelPrefSet() ? hotelPrefText() : 'Not set'; if (b) b.textContent = flightPrefText(); }
+function bookingFilters() { const H = PREF.hotel, f = [];   // Booking.com search filters (nflt) built from the hotel preferences
+  if (H.stars) for (let k = H.stars; k <= 5; k++) f.push('class=' + k);
+  if (H.min || H.max) f.push(`price=${myCurrency()}-${+H.min || 0}-${+H.max || 'max'}-1`);
+  H.am.forEach(a => { const m = AMEN.find(x => x[0] === a); if (m?.[2]) f.push(m[2]); }); const t = HTYPES.find(x => x[0] === H.type); if (t?.[2]) f.push('ht_id=' + t[2]);
+  return f.length ? '&nflt=' + encodeURIComponent(f.join(';')) : ''; }
+function hotelPrefWords() { const H = PREF.hotel, w = []; if (H.stars) w.push(H.stars + '-star'); if (H.type !== 'any') w.push(HTYPES.find(x => x[0] === H.type)[1].toLowerCase());
+  const am = H.am.map(a => AMEN.find(x => x[0] === a)?.[1].replace(/^\S+\s/, '').toLowerCase()).filter(Boolean); if (am.length) w.push('with ' + am.join(', ')); if (H.max) w.push('under ' + money(+H.max, myCurrency()) + ' a night'); return w.join(' '); }
+function hotelFits(x) {   // does a hotel in the list match the saved preferences? (unknown details don't count against it)
+  if (!hotelPrefSet()) return false; const H = PREF.hotel;
+  if (H.stars && x.stars && x.stars < H.stars) return false; if (H.stars && !x.stars && !/hotel/.test(x.kind || 'hotel')) return false;
+  const n = x.rate?.night; if (n && ((H.min && n < +H.min) || (H.max && n > +H.max))) return false;
+  if (H.type === 'apartment' && !/apartment/.test(x.kind || '')) return false; if (H.type === 'hostel' && !/hostel/.test(x.kind || '')) return false; if (H.type === 'bnb' && !/guest_house|bnb/.test(x.kind || '')) return false; if (H.type === 'hotel' && /hostel|apartment|guest_house/.test(x.kind || '')) return false;
+  if (H.chains.trim() && x.brand) { const ok = H.chains.toLowerCase().split(/[,;]/).map(s => s.trim()).filter(Boolean); if (ok.length && !ok.some(c => x.brand.toLowerCase().includes(c) || x.name.toLowerCase().includes(c))) return false; }
+  return true; }
+function flightPrefWords() { const F = PREF.flight, w = []; if (F.cabin !== 'economy') w.push(CABIN.find(x => x[0] === F.cabin)[1].toLowerCase() + ' class'); if (F.stops === '0') w.push('nonstop'); if (F.stops === '1') w.push('1 stop or fewer');
+  if (F.airlines.trim()) w.push('on ' + F.airlines.trim()); if (F.avoid.trim()) w.push('not ' + F.avoid.trim()); if (F.alliance !== 'any') w.push(F.alliance + ' airlines');
+  if (F.time === 'morning') w.push('departing in the morning'); if (F.time === 'afternoon') w.push('departing in the afternoon'); if (F.time === 'evening') w.push('departing in the evening'); if (F.time === 'noredeye') w.push('no red-eye flights');
+  if (F.bags !== '0') w.push('with ' + F.bags + ' checked bag' + (F.bags === '1' ? '' : 's')); return w.join(' '); }
+let prefTab = 'hotel';
+function openPrefs(tab) { prefTab = tab || prefTab; renderTravelPrefs(); $('#setSheet').classList.remove('on'); $('#prefSheet').classList.add('on'); }
+function renderTravelPrefs() { const H = PREF.hotel, F = PREF.flight, c = myCurrency();
+  const seg = (key, opts, val) => `<div class="seg">${opts.map(([v, n]) => `<button class="pill sm ${String(val) === String(v) ? 'on' : ''}" data-ps="${key}" data-v="${v}">${n}</button>`).join('')}</div>`;
+  let h = `<h2>Travel preferences</h2><p style="color:var(--soft);margin:-4px 0 8px;font-size:14px">Safar uses these in every hotel and flight search, and marks hotels that fit.</p>
+  <div class="ptabs"><button class="pill sm ${prefTab === 'hotel' ? 'on' : ''}" data-ptab="hotel">🏨 Hotels</button><button class="pill sm ${prefTab === 'flight' ? 'on' : ''}" data-ptab="flight">✈️ Flights</button></div>`;
+  if (prefTab === 'hotel') h += `<div class="pf"><span class="pl">Minimum star rating</span>${seg('hotel.stars', [[0, 'Any'], [2, '2★'], [3, '3★'], [4, '4★'], [5, '5★']], H.stars)}</div>
+    <div class="pf"><span class="pl">Price per night (${c})</span><div class="two"><input class="input" inputmode="numeric" data-pi="hotel.min" placeholder="Min" value="${esc(H.min)}"><span>–</span><input class="input" inputmode="numeric" data-pi="hotel.max" placeholder="Max" value="${esc(H.max)}"></div></div>
+    <div class="pf"><span class="pl">Must-haves</span><div class="seg">${AMEN.map(([k, n]) => `<button class="pill sm ${H.am.includes(k) ? 'on' : ''}" data-pam="${k}">${n}</button>`).join('')}</div></div>
+    <div class="pf"><span class="pl">Type of stay</span>${seg('hotel.type', HTYPES, H.type)}</div>
+    <div class="pf"><label for="pfCh">Preferred hotel chains</label><input class="input" id="pfCh" data-pi="hotel.chains" placeholder="e.g. Marriott, Hilton" value="${esc(H.chains)}"></div>
+    <div class="pf"><label for="pfLy">Loyalty programs</label><input class="input" id="pfLy" data-pi="hotel.loyalty" placeholder="e.g. Marriott Bonvoy 123456789" value="${esc(H.loyalty)}"><small class="h">Kept on this device only, for your reference at booking.</small></div>`;
+  else h += `<div class="pf"><label for="pfHome">Home airport</label><input class="input" id="pfHome" data-pi="flight.home" placeholder="e.g. YVR or Vancouver" value="${esc(F.home)}"></div>
+    <div class="pf"><span class="pl">Cabin</span>${seg('flight.cabin', CABIN, F.cabin)}</div>
+    <div class="pf"><span class="pl">Stops</span>${seg('flight.stops', [['any', 'Any'], ['0', 'Nonstop only'], ['1', '1 stop max']], F.stops)}</div>
+    <div class="pf"><span class="pl">Checked bags</span>${seg('flight.bags', [['0', 'None'], ['1', '1'], ['2', '2']], F.bags)}</div>
+    <div class="pf"><span class="pl">Seat</span>${seg('flight.seat', [['any', 'Any'], ['aisle', 'Aisle'], ['window', 'Window']], F.seat)}</div>
+    <div class="pf"><span class="pl">Departure time</span>${seg('flight.time', FTIME, F.time)}</div>
+    <div class="pf"><label for="pfAir">Preferred airlines</label><input class="input" id="pfAir" data-pi="flight.airlines" placeholder="e.g. Air Canada, Lufthansa" value="${esc(F.airlines)}"></div>
+    <div class="pf"><label for="pfAv">Airlines to avoid</label><input class="input" id="pfAv" data-pi="flight.avoid" placeholder="Optional" value="${esc(F.avoid)}"></div>
+    <div class="pf"><span class="pl">Alliance</span>${seg('flight.alliance', [['any', 'Any'], ['Star Alliance', 'Star Alliance'], ['oneworld', 'oneworld'], ['SkyTeam', 'SkyTeam']], F.alliance)}</div>`;
+  h += `<div style="display:flex;gap:8px;margin-top:6px"><button class="cta" data-pdone style="flex:1">Done</button><button class="pill" data-preset>Reset ${prefTab === 'hotel' ? 'hotels' : 'flights'}</button></div>`;
+  $('#prefIn').innerHTML = h; }
+$('#prefHotels').onclick = () => openPrefs('hotel'); $('#prefFlights').onclick = () => openPrefs('flight');
+$('#prefIn').addEventListener('click', e => {
+  const t = e.target.closest('[data-ptab]'); if (t) { prefTab = t.dataset.ptab; renderTravelPrefs(); return; }
+  const s = e.target.closest('[data-ps]'); if (s) { const [g, k] = s.dataset.ps.split('.'); PREF[g][k] = k === 'stars' ? +s.dataset.v : s.dataset.v; savePref(); renderTravelPrefs(); return; }
+  const a = e.target.closest('[data-pam]'); if (a) { const k = a.dataset.pam, L = PREF.hotel.am; PREF.hotel.am = L.includes(k) ? L.filter(x => x !== k) : [...L, k]; savePref(); renderTravelPrefs(); return; }
+  if (e.target.closest('[data-preset]')) { PREF[prefTab] = JSON.parse(JSON.stringify(PREF0[prefTab])); savePref(); renderTravelPrefs(); return; }
+  if (e.target.closest('[data-pdone]')) { $('#prefSheet').classList.remove('on'); $('#setSheet').classList.add('on'); if (S.step === 'stay') renderStay(); }
+});
+$('#prefIn').addEventListener('input', e => { const i = e.target.closest('[data-pi]'); if (!i) return; const [g, k] = i.dataset.pi.split('.'); PREF[g][k] = /min|max/.test(k) ? i.value.replace(/[^\d]/g, '') : i.value; if (i.value !== PREF[g][k]) i.value = PREF[g][k]; savePref(); });
+renderPrefSum();
 function bookUrl(h) { const cid = h.city || cur()?.id, i0 = dayIndexOfCity(cid), c = cities().find(x => x.id === cid) || cur(), ds = tripDates(); const ci = ds[i0] || S.settings.startDate;
-  const co = isoDay(new Date(new Date(ci + 'T00:00:00Z').getTime() + nightsOf(c) * 864e5)); return `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(h.name + ', ' + (c?.name || ''))}&checkin=${ci}&checkout=${co}&group_adults=${Math.max(1, +S.settings.guests || 2)}&no_rooms=1`; }
+  const co = isoDay(new Date(new Date(ci + 'T00:00:00Z').getTime() + nightsOf(c) * 864e5)); return `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(h.name + ', ' + (c?.name || ''))}&checkin=${ci}&checkout=${co}&group_adults=${Math.max(1, +S.settings.guests || 2)}&no_rooms=1${bookingFilters()}`; }
 // ---- hotel prices: dated links to compare sites (always), live prices from Safar's server (when its hotel-rates key is set) ----
 function stayOf(h) { const cid = h.city || cur()?.id, c = cities().find(x => x.id === cid) || cur(), ds = tripDates(), ci = ds[dayIndexOfCity(cid)] || S.settings.startDate, n = nightsOf(c) || 1;
   return { c, ci, co: ci ? isoDay(new Date(new Date(ci + 'T00:00:00Z').getTime() + n * 864e5)) : '', n, ad: Math.max(1, +S.settings.guests || 2) }; }
@@ -1613,6 +1687,7 @@ function hotelCard(x, i, sel) {
     ${x.rating ? `<div class="smeta" style="margin-top:4px">${stars(x.rating)}${x.reviewsN ? `<span>(${x.reviewsN.toLocaleString()} reviews)</span>` : ''}${x.price ? `<span>· ${x.price}</span>` : ''}</div>` : ''}
     ${x.reviews?.[0]?.text ? `<p class="rev">“${esc(x.reviews[0].text.slice(0, 140))}${x.reviews[0].text.length > 140 ? '…' : ''}” <span>— ${esc(x.reviews[0].who)}</span></p>` : ''}
     <div class="hchips"><span>🚶 ~${Math.max(1, x.walk || 1)} min to your picks</span>${x.wifi ? '<span>📶 Wi-Fi</span>' : ''}${x.access ? '<span>♿ Accessible</span>' : ''}${x.rooms ? `<span>🛏️ ${x.rooms} rooms</span>` : ''}</div>
+    ${hotelFits(x) ? '<span class="hfit">✓ Fits your preferences</span>' : ''}
     ${rateLine(x)}
     <div class="hbtns"><a class="mini" target="_blank" rel="noopener" href="${bookUrl(x)}">Book ↗</a><button class="mini" data-cmp="${esc(x.name)}" aria-expanded="${cmpOpen === x.name}">Compare prices</button>${x.gurl ? `<a class="mini" target="_blank" rel="noopener" href="${esc(x.gurl)}">Reviews</a>` : ''}${x.web ? `<a class="mini" target="_blank" rel="noopener" href="${esc(x.web)}">Website</a>` : ''}<button class="mini teal" data-base="${i}">${sel ? 'Chosen ✓' : 'Stay here'}</button></div>
     ${cmpOpen === x.name ? `<div class="hcmp">${compareLinks(x).map(([n, u]) => `<a target="_blank" rel="noopener" href="${esc(u)}">${n} ↗</a>`).join('')}<small>Opens each site with your dates and ${stayOf(x).ad} ${stayOf(x).ad === 1 ? 'guest' : 'guests'}</small></div>` : ''}</div></div>`;
@@ -1623,12 +1698,12 @@ function renderStay() {
   const base = basesC().filter(b => !b.temp)[0], H = HB(); let h = airbnbCard(base);
   const isBase = x => base && !base.airbnb && (Core.hav(base, x) < 60 || base.name.toLowerCase() === (x.name || '').toLowerCase());
   if (base && !(H?.list || []).some(isBase)) h += hotelCard({ ...base, kind: 'hotel', walk: 0, img: base.img || '' }, -1, true);
-  h += `<div class="chips" style="margin-top:4px">${[['all', 'Recommended'], ['lux', '4★ and up'], ['budget', 'Budget'], ['near', 'Closest'], ...((H?.list || []).some(x => x.rate?.night) ? [['cheap', 'Cheapest']] : [])].map(([k, n]) => `<button class="pill sm ${hFilter === k ? 'on' : ''}" data-hf="${k}">${n}</button>`).join('')}</div>`;
+  h += (hotelPrefSet() ? `<div class="prefnote" style="font-size:13px;color:var(--soft);margin:2px 0 6px">Your preferences: ${esc(hotelPrefText())} · <a href="#" data-editpref>Edit</a></div>` : '') + `<div class="chips" style="margin-top:4px">${[['all', 'Recommended'], ...(hotelPrefSet() ? [['mine', 'Fits my preferences']] : []), ['lux', '4★ and up'], ['budget', 'Budget'], ['near', 'Closest'], ...((H?.list || []).some(x => x.rate?.night) ? [['cheap', 'Cheapest']] : [])].map(([k, n]) => `<button class="pill sm ${hFilter === k ? 'on' : ''}" data-hf="${k}">${n}</button>`).join('')}</div>`;
   if (!H) h += '<div class="skel" style="height:220px;margin-bottom:12px"></div>'.repeat(3);
   else if (!H.list.length) h += hotelsLoading ? '<div class="skel" style="height:220px;margin-bottom:12px"></div>'.repeat(2) : `<div class="warn">Hotel listings are busy right now. <a href="#" data-hretry>Try again</a> — or search your hotel above.</div>`;
   else {
     let L = H.list.map((x, i) => ({ x, i }));
-    if (hFilter === 'lux') L = L.filter(o => o.x.stars >= 4); if (hFilter === 'budget') L = L.filter(o => /hostel|guest_house|apartment/.test(o.x.kind) || (o.x.stars && o.x.stars <= 3)); if (hFilter === 'near') L = L.slice().sort((a, b) => a.x.walk - b.x.walk); if (hFilter === 'cheap') L = L.filter(o => o.x.rate?.night).sort((a, b) => a.x.rate.night - b.x.rate.night);
+    if (hotelPrefSet() && hFilter === 'all') L = L.slice().sort((a, b) => hotelFits(b.x) - hotelFits(a.x)); if (hFilter === 'mine') L = L.filter(o => hotelFits(o.x)); if (hFilter === 'lux') L = L.filter(o => o.x.stars >= 4); if (hFilter === 'budget') L = L.filter(o => /hostel|guest_house|apartment/.test(o.x.kind) || (o.x.stars && o.x.stars <= 3)); if (hFilter === 'near') L = L.slice().sort((a, b) => a.x.walk - b.x.walk); if (hFilter === 'cheap') L = L.filter(o => o.x.rate?.night).sort((a, b) => a.x.rate.night - b.x.rate.night);
     h += L.length ? L.slice(0, 12).map(o => hotelCard(o.x, o.i, isBase(o.x))).join('') : '<p style="color:var(--soft)">Nothing matches — try another filter, or search above.</p>';
   }
   $('#stayList').innerHTML = h;
@@ -1652,6 +1727,7 @@ $('#stayList').addEventListener('click', e => {
   if (e.target.closest('#abSave')) { addAirbnb(); return; }
   if (e.target.closest('[data-abcancel]')) { abDraft.open = false; renderStay(); return; }
   const f = e.target.closest('[data-hf]'); if (f) { hFilter = f.dataset.hf; renderStay(); return; }
+  if (e.target.closest('[data-editpref]')) { e.preventDefault(); openPrefs('hotel'); return; }
   const cm = e.target.closest('[data-cmp]'); if (cm) { cmpOpen = cmpOpen === cm.dataset.cmp ? '' : cm.dataset.cmp; renderStay(); return; }
   if (e.target.closest('[data-hretry]')) { e.preventDefault(); delete S.hotelBy[cur().id]; loadHotels(true); renderStay(); return; }
   const b = e.target.closest('[data-base]'); if (b) { if (+b.dataset.base >= 0) setBase(HB().list[+b.dataset.base]); return; }
@@ -3406,8 +3482,8 @@ $('#remPref')?.addEventListener('click', async e => { const b = e.target.closest
   if (v) { try { const P = LN(); if (P) { const r = await P.requestPermissions(); if (r.display !== 'granted') toast('Turn on notifications for Safar in Settings to get reminders'); }
       else if (window.Notification && Notification.permission === 'default') await Notification.requestPermission(); } catch (er) {} }
   remSchedule(); if (v) { const n = remList().length; toast(n ? `${n} reminder${n === 1 ? '' : 's'} set` : 'Reminders on — they start once your trip days have a plan'); } });
-$('#foodPref').onclick = e => { const b = e.target.closest('[data-food]'); if (!b) return; const f = S.settings.foods ||= []; const i = f.indexOf(b.dataset.food); i >= 0 ? f.splice(i, 1) : f.push(b.dataset.food); for (const k in spotCache) delete spotCache[k]; save(); renderPrefs(); };
-$('#stamPref').onclick = e => { const b = e.target.closest('[data-stam]'); if (!b) return; S.settings.stamina = b.dataset.stam; save(); renderPrefs(); };
+$('#foodPref').onclick = e => { const b = e.target.closest('[data-food]'); if (!b) return; const f = S.settings.foods ||= []; const i = f.indexOf(b.dataset.food); i >= 0 ? f.splice(i, 1) : f.push(b.dataset.food); for (const k in spotCache) delete spotCache[k]; save(); renderTravelPrefs(); };
+$('#stamPref').onclick = e => { const b = e.target.closest('[data-stam]'); if (!b) return; S.settings.stamina = b.dataset.stam; save(); renderTravelPrefs(); };
 const CONN_NOTE = {
   Uber: 'When a hop is too far to walk, Safar offers “Book Uber”: it opens the Uber app with your pickup and the next stop already filled in, so it\'s one tap to request. Booking the ride for you without that tap needs Uber\'s approval of Safar as a partner app.',
   Claude: 'You add Safar as a connector in Claude; Claude can then read and adjust this trip.', ChatGPT: 'You add Safar as an app in ChatGPT; it can then read and adjust this trip.' };
