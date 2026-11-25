@@ -18,7 +18,7 @@ document.documentElement.lang = LANG; if (LANG === 'fa' || LANG === 'ar') docume
 </script>
 <script>
 // Error reporting: if something breaks on a phone, a short note (the error message and where in Safar's code it happened — never trip contents or account details) goes to the Safar server so it can be fixed. At most 5 notes per visit.
-window.SAFAR_V = '2026.11.25-0053-staging';
+window.SAFAR_V = '2026.11.25-0115-staging';
 (() => { const seen = new Set(); let n = 0; const URL0 = 'https://safar-api.hamid-ebb.workers.dev/err';
   const send = (m, st) => { try { m = String(m || '').slice(0, 300); if (!m || n >= 5 || seen.has(m) || /ResizeObserver loop|^Script error\.?$/.test(m)) return; seen.add(m); n++;
     const body = JSON.stringify({ m, s: String(st || '').split('\n').slice(0, 5).join('\n').slice(0, 700), v: window.SAFAR_V, t: /[?&]test=1/.test(location.search) ? 1 : 0, ua: navigator.userAgent.slice(0, 160) });
@@ -3423,7 +3423,7 @@ function renderPrefs() {
 }
 // ---- Safar Pro: paid on the web through Stripe payment links; the server records it against the signed-in account ----
 // Until the payment links are filled in, every feature stays free (PAY.year empty = payments off).
-const PAY = { year: '', pass: '', portal: '' };
+const PAY = { year: 'https://buy.stripe.com/7sYeV6bWu32Gad60qP9k409', pass: 'https://buy.stripe.com/6oU8wI2lU7iW0Cw5L99k40a', portal: 'https://billing.stripe.com/p/login/bJefZa8KicDg9926Pd9k400' };
 const payOn = () => !!PAY.year && !isNative();   // the iPhone app can't sell through Stripe (Apple's rules); a Pro account still unlocks there
 const PRO_KEY = SKEY + '_pro', PRO_FEATS = { offline: 'Offline maps', live: 'Live editing together', calendar: 'Calendar sync', import: 'Unlimited booking import' };
 function proState() { try { return JSON.parse(localStorage.getItem(PRO_KEY) || 'null') || {}; } catch (e) { return {}; } }
@@ -3442,7 +3442,11 @@ function openPaywall(feat) { const signed = !!cloudSess(), st = proState();
          <p class="protax">Plus sales tax where it applies. Paid securely through Stripe; Safar never sees your card. ${st.until > Date.now() ? '' : 'Pro turns on within a minute of paying.'}</p>`}
     <div style="margin-top:14px"><button class="cta ghost" data-close>Not now</button></div>`;
   $('#proSheet').classList.add('on'); track('paywall:' + (feat || 'open')); }
-$('#proIn').addEventListener('click', e => { const b = e.target.closest('[data-buy]'); if (!b) return; track('buy:' + b.dataset.buy); location.href = payUrl(b.dataset.buy); });
+$('#proIn').addEventListener('click', async e => { const b = e.target.closest('[data-buy]'); if (!b || b.disabled) return; const kind = b.dataset.buy; track('buy:' + kind); b.disabled = true;
+  try {   // Safar-branded checkout from the server; the plain Stripe payment link if the server can't make one
+    const r = await apiFetch('/pay/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kind, email: S.account?.email || '', back: location.origin + location.pathname }) }, 10000);
+    const j = r.ok ? await r.json() : {}; if (j.url) { location.href = j.url; return; }
+  } catch (x) {} location.href = payUrl(kind); });
 function renderPro() { try { renderBizSum(); } catch (e) {} const box = $('#proBox'); if (!box) return; if (!PAY.year && !proState().until) { box.innerHTML = ''; return; } const st = proState(), on = (st.until || 0) > Date.now();
   const until = on ? new Date(st.until).toLocaleDateString(LOC, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
   box.innerHTML = `<div class="probox"><div><b>${on ? 'Safar Pro' : 'Safar Free'}</b><small>${on ? (st.plan === 'year' ? (st.canceled ? `Ends ${until}` : `Renews ${until}`) : `Trip Pass until ${until}`) : 'Offline maps, live editing, calendar sync and more with Pro'}</small></div>${on ? (st.plan === 'year' && PAY.portal ? `<a class="mini" href="${esc(PAY.portal)}" target="_blank" rel="noopener">Manage</a>` : '') : `<button class="mini teal" data-pro>See Pro</button>`}</div>`; }

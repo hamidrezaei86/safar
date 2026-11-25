@@ -87,7 +87,7 @@ async function githubBackupJob(req) {
   } catch (e) { return false; }
 }
 // ---- abuse limits: per-address caps per hour, kept in memory (free, no storage writes). Each server copy counts on its own, so the caps are approximate. ----
-const CAPS = { transit: 60, 'hotel-rates': 60, 'live-new': 20, 'live-put': 600, mcp: 120, overpass: 300, auth: 30, 'trip-put': 600, export: 200 };
+const CAPS = { checkout: 20, transit: 60, 'hotel-rates': 60, 'live-new': 20, 'live-put': 600, mcp: 120, overpass: 300, auth: 30, 'trip-put': 600, export: 200 };
 let HITS = new Map(), HITS_HOUR = 0; const TRM = { m: 0, n: 0 };
 function overCap(req, kind) {
   const hr = Math.floor(Date.now() / 36e5); if (hr !== HITS_HOUR || HITS.size > 20000) { HITS = new Map(); HITS_HOUR = hr; }
@@ -253,6 +253,30 @@ export default {
           if (old) { const o = JSON.parse(old), was = o.trip?.cities?.length || 0, now = j.trip.cities.length; if ((was && !now) || Date.now() - (o.saved || 0) > 1800000) await env.SAFAR.put('trip-prev:' + uid, old); if (was && !now && !j.clear) return json(req, { ok: true, kept: true }); }
           await env.SAFAR.put('trip:' + uid, JSON.stringify({ trip: j.trip, updated: +j.updated || Date.now(), saved: Date.now() })); return json(req, { ok: true });
         }
+      }
+      if (p === '/pay/checkout' && req.method === 'POST') {   // a Safar-branded Stripe checkout for the signed-in user (payment links can't carry Safar's look)
+        if (overCap(req, 'checkout')) return tooMany(req, 'checkout');
+        if (!ORIGINS.includes(req.headers.get('Origin') || '')) return json(req, { error: 'not allowed' }, 403);
+        if (!env.STRIPE_KEY) return json(req, { enabled: false });   // no key yet: the app falls back to the plain payment links
+        const uid = await session(req, env); if (!uid) return json(req, { error: 'not signed in' }, 401);
+        let b = {}; try { b = await req.json(); } catch (x) {}
+        const PRICES = { year: 'price_1UfbLC2ZaGvtISUkKaQ2ZZad', pass: 'price_1UfbLD2ZaGvtISUkSwzetuvG' }, kind = b.kind === 'pass' ? 'pass' : 'year';
+        const back = /^https:\/\/safar\.amovasolutions\.com\/(staging\/)?$/.test(b.back || '') ? b.back : 'https://safar.amovasolutions.com/';
+        const f = new URLSearchParams({
+          mode: kind === 'year' ? 'subscription' : 'payment', 'line_items[0][price]': PRICES[kind], 'line_items[0][quantity]': '1',
+          client_reference_id: b64u(enc.encode(uid)), success_url: back + '?pro=done', cancel_url: back,
+          'automatic_tax[enabled]': 'true', allow_promotion_codes: 'true', 'tax_id_collection[enabled]': 'true', billing_address_collection: 'auto',
+          'branding_settings[display_name]': 'Safar', 'branding_settings[background_color]': '#0c1633', 'branding_settings[button_color]': '#0b7d70', 'branding_settings[border_style]': 'rounded',
+          'branding_settings[icon][type]': 'url', 'branding_settings[icon][url]': 'https://safar.amovasolutions.com/icon-512.png',
+          'metadata[app]': 'safar', 'metadata[plan]': kind,
+          'custom_text[submit][message]': kind === 'year' ? "Renews each year; cancel any time from Safar's Settings. By paying you agree to Safar's terms: safar.amovasolutions.com/terms.html" : "One payment for 30 days of Safar Pro; it does not renew. By paying you agree to Safar's terms: safar.amovasolutions.com/terms.html" });
+        if (kind === 'pass') { f.set('customer_creation', 'always'); f.set('invoice_creation[enabled]', 'true'); f.set('invoice_creation[invoice_data][description]', 'Safar Trip Pass: 30 days of Safar Pro'); f.set('payment_intent_data[statement_descriptor_suffix]', 'SAFAR'); }
+        else f.set('subscription_data[description]', 'Safar Pro, yearly');
+        if (/^[^@\s]{1,64}@[^@\s]{1,190}$/.test(b.email || '')) f.set('customer_email', b.email);
+        const r = await fetch('https://api.stripe.com/v1/checkout/sessions', { method: 'POST', body: f, headers: { Authorization: 'Bearer ' + env.STRIPE_KEY, 'Content-Type': 'application/x-www-form-urlencoded' } });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok || !j.url) return json(req, { enabled: true, error: j.error?.message || 'checkout failed' }, 502);
+        return json(req, { enabled: true, url: j.url });
       }
       if (p === '/pay/webhook' && req.method === 'POST') {   // Stripe tells Safar a payment went through; only Stripe-signed messages count
         if (!env.STRIPE_WHSEC) return json(req, { error: 'payments not set up' }, 503);

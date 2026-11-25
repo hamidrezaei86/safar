@@ -147,7 +147,7 @@ test('Add to calendar writes the plan into the connected Google calendar', async
   await offline(page); const posted = [];
   await page.route('**/api.open-meteo.com/**', r => r.fulfill({ body: '{"timezone":"Europe/Rome"}', contentType: 'application/json' }));
   await page.route('**/www.googleapis.com/calendar/v3/calendars/primary/events', r => { posted.push(JSON.parse(r.request().postData())); r.fulfill({ body: JSON.stringify({ id: 'ev' + posted.length }), contentType: 'application/json' }); });
-  await open(page); await demoTrip(page);
+  await open(page); await page.evaluate(() => { if (typeof PRO_KEY !== 'undefined') localStorage.setItem(PRO_KEY, JSON.stringify({ until: Date.now() + 1e10, plan: 'year' })); }); await demoTrip(page);
   await page.evaluate(() => { S.account = { provider: 'google', email: 't@example.com', name: 'T' }; S.links = [{ prov: 'google', email: 't@example.com', token: 'x', exp: Date.now() + 3e6, mail: true, cal: true, calw: true }]; saveNow(); });
   await page.click('.step[data-step="plan"]'); await page.click('#ics');
   await expect.poll(() => posted.length, { timeout: 15000 }).toBeGreaterThan(3);
@@ -176,7 +176,7 @@ test('Save map offline stores the trip area map pieces', async ({ page }) => {
   await page.route('**/tiles.openfreemap.org/styles/liberty', r => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ version: 8, sprite: 'https://tiles.openfreemap.org/sprites/x/ofm', glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf', sources: {}, layers: [{ id: 'l', type: 'symbol', layout: { 'text-font': ['Noto Sans Regular'] } }] }) }));
   await page.route(/tiles\.openfreemap\.org\/(planet\/v1|fonts|sprites)/, r => r.fulfill({ body: 'x' }));
   await page.route('**/cdnjs.cloudflare.com/**', r => r.fulfill({ body: '/* lib */', contentType: 'text/javascript' }));
-  await open(page); await demoTrip(page); await page.click('.step[data-step="plan"]'); await page.click('#offl');
+  await open(page); await page.evaluate(() => { if (typeof PRO_KEY !== 'undefined') localStorage.setItem(PRO_KEY, JSON.stringify({ until: Date.now() + 1e10, plan: 'year' })); }); await demoTrip(page); await page.click('.step[data-step="plan"]'); await page.click('#offl');
   await expect(page.locator('#offl')).toHaveText('Map saved offline ✓', { timeout: 30000 });
   const n = await page.evaluate(async () => (await (await caches.open('safar-offline-v1')).keys()).filter(r => r.url.endsWith('.pbf') && r.url.includes('/planet/v1/14/')).length);
   expect(n).toBeGreaterThan(4);
@@ -191,7 +191,7 @@ test('live trip: a companion with the edit link changes the trip and the owner s
     if (req.method() === 'GET') { const since = +u.searchParams.get('since') || 0; return J(since >= room.rev ? { rev: room.rev } : room); }
     if (req.method() === 'PUT') { const b = JSON.parse(req.postData()); if (b.base !== room.rev) return J({ error: 'changed', ...room }, 409); room.trip = b.trip; room.rev++; return J({ ok: true, rev: room.rev }); }
     return J({ ok: true }); }); };
-  const a = await (await browser.newContext({ serviceWorkers: 'block' })).newPage(); await mockLive(a); await open(a); await demoTrip(a);
+  const a = await (await browser.newContext({ serviceWorkers: 'block' })).newPage(); await mockLive(a); await open(a); await a.evaluate(() => { if (typeof PRO_KEY !== 'undefined') localStorage.setItem(PRO_KEY, JSON.stringify({ until: Date.now() + 1e10, plan: 'year' })); }); await demoTrip(a);
   await a.click('.step[data-step="plan"]'); await a.click('#shareB'); await a.click('#liveGo');
   await expect(a.locator('#shareIn')).toContainText('Live trip is on');
   const editLink = await a.evaluate(() => liveUrl(true)); expect(editLink).toMatch(/#live=room1abcd\.editkey123456$/);
@@ -332,6 +332,8 @@ test('leave-time reminders: the phone gets "Leave in 10 min for …" at the righ
 test('Safar Pro: free until payments are switched on; then Pro features open the paywall and buying goes to Stripe for this account', async ({ page }) => {
   stagingOnly();
   const errors = await offline(page); await open(page); await demoTrip(page);
+  const links = await page.evaluate(() => ({ ...PAY })); expect(links.year).toMatch(/^https:\/\/buy\.stripe\.com\//); expect(links.portal).toMatch(/^https:\/\/billing\.stripe\.com\//);
+  await page.evaluate(() => { PAY.year = ''; });
   await page.click('.step[data-step="plan"]'); await expect(page.locator('#planOut')).toContainText('Day 1');
   expect(await page.evaluate(() => isPro())).toBe(true);   // payments off → everything free
   await page.evaluate(() => { PAY.year = 'https://buy.stripe.com/test_year'; PAY.pass = 'https://buy.stripe.com/test_pass'; localStorage.setItem(SESS_KEY, encodeURIComponent('google:42') + '.9999999999.sig'); S.account = { provider: 'google', email: 'a@b.com', name: 'A' }; });
@@ -346,6 +348,11 @@ test('Safar Pro: free until payments are switched on; then Pro features open the
   const u = new URL(went); expect(u.pathname).toBe('/test_pass');
   expect(Buffer.from(u.searchParams.get('client_reference_id'), 'base64url').toString()).toBe('google:42');
   expect(u.searchParams.get('prefilled_email')).toBe('a@b.com');
+  let asked = null; await page.route('**/safar-api.hamid-ebb.workers.dev/pay/checkout', r => { asked = r.request().postDataJSON(); r.fulfill({ contentType: 'application/json', body: '{"enabled":true,"url":"https://checkout.stripe.com/c/pay/cs_test_safar"}' }); });
+  let branded = null; await page.route('https://checkout.stripe.com/**', r => { branded = r.request().url(); r.fulfill({ body: 'stripe' }); });
+  await page.goBack().catch(() => {}); await open(page); await page.evaluate(() => { PAY.year = 'https://buy.stripe.com/test_year'; localStorage.setItem(SESS_KEY, encodeURIComponent('google:42') + '.9999999999.sig'); openPaywall(); });
+  await page.$eval('#proIn [data-buy="year"]', e => e.click());
+  await expect.poll(() => branded).toContain('cs_test_safar'); expect(asked.kind).toBe('year');
   expect(errors).toEqual([]);
 });
 
