@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /staging/
+Disallow: /admin.html
+Disallow: /auth.html
+
+Sitemap: https://safar.amovasolutions.com/sitemap.xml

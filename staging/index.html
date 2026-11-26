@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<link rel="canonical" href="https://safar.amovasolutions.com/">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="Safar"><meta name="theme-color" content="#eef1f5">
 <title>Safar (staging)</title>
@@ -18,7 +19,7 @@ document.documentElement.lang = LANG; if (LANG === 'fa' || LANG === 'ar') docume
 </script>
 <script>
 // Error reporting: if something breaks on a phone, a short note (the error message and where in Safar's code it happened — never trip contents or account details) goes to the Safar server so it can be fixed. At most 5 notes per visit.
-window.SAFAR_V = '2026.11.26-0144-staging';
+window.SAFAR_V = '2026.11.26-1144-staging';
 (() => { const seen = new Set(); let n = 0; const URL0 = 'https://safar-api.hamid-ebb.workers.dev/err';
   const send = (m, st) => { try { m = String(m || '').slice(0, 300); if (!m || n >= 5 || seen.has(m) || /ResizeObserver loop|^Script error\.?$/.test(m)) return; seen.add(m); n++;
     const body = JSON.stringify({ m, s: String(st || '').split('\n').slice(0, 5).join('\n').slice(0, 700), v: window.SAFAR_V, t: /[?&]test=1/.test(location.search) ? 1 : 0, ua: navigator.userAgent.slice(0, 160) });
