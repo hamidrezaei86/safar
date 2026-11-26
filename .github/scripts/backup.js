@@ -6,7 +6,7 @@
 //   node backup.js --decrypt FILE PRIVATE_KEY.pem   → prints the counts inside a backup (restore check)
 const fs = require('fs'), zlib = require('zlib'), crypto = require('crypto');
 const API = process.env.SAFAR_API || 'https://safar-api.hamid-ebb.workers.dev';
-const PREFIXES = ['user:', 'trip:', 'trip-prev:', 'live:', 'pro:', 'cus:'];
+const PREFIXES = ['user:', 'trip:', 'trip-prev:', 'btrip:', 'live:', 'pro:', 'cus:', 'org:', 'orgof:', 'orep:', 'obook:', 'rcpt:'];
 const keyOf = (pass, salt) => crypto.scryptSync(pass, salt, 32);
 function seal(obj, pass) {
   const salt = crypto.randomBytes(16), iv = crypto.randomBytes(12), c = crypto.createCipheriv('aes-256-gcm', keyOf(pass, salt), iv);

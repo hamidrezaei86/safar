@@ -28,19 +28,30 @@ const json = (req, body, status = 200) => new Response(JSON.stringify(body), { s
 let KEY;
 async function skey(env) { if (KEY) return KEY; KEY = env.SESSION_KEY || await env.SAFAR.get('cfg:session_key'); if (!KEY) { KEY = b64u(crypto.getRandomValues(new Uint8Array(32))); await env.SAFAR.put('cfg:session_key', KEY); } return KEY; }
 
-// ---- Safar Business: a company account with up to 10 travellers ----
+// ---- Safar Business: a company account with up to 10 travellers, a main owner and co-owners ----
 const SEATS = 10, normEmail = e => String(e || '').trim().toLowerCase(), okEmail = e => /^[^@\s]{1,64}@[^@\s]{1,190}\.[a-z]{2,}$/i.test(e);
 async function orgOf(env, uid) { const id = await env.SAFAR.get('orgof:' + uid); return id ? JSON.parse(await env.SAFAR.get('org:' + id) || 'null') : null; }
-async function bizPlan(env, org) { const r = JSON.parse(await env.SAFAR.get('pro:' + org.owner) || 'null') || {}; return { active: r.plan === 'business' && r.until > Date.now(), until: r.until || 0, canceled: !!r.canceled }; }
-const orgOut = (o, uid) => ({ id: o.id, name: o.name, address: o.address, country: o.country, taxId: o.taxId, costCentre: o.costCentre, approver: o.approver, currency: o.currency, owner: o.owner === uid,
-  members: o.owner === uid ? o.members.map(m => ({ name: m.name, email: m.email, status: m.status, invitedAt: m.invitedAt, joinedAt: m.joinedAt || 0, link: m.status === 'invited' ? m.token : undefined })) : undefined, seats: SEATS });
-async function inviteMail(env, org, m, link, from) {   // sent from support@amovasolutions.com when the RESEND_KEY secret is set; otherwise the admin shares the link
-  if (!env.RESEND_KEY) return false;
-  const esc = t => String(t || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const html = `<p>Hello ${esc(m.name)},</p><p>${esc(from)} has added you to <b>${esc(org.name || 'your company')}</b> on Safar, the trip planner, as a business traveller.</p><p>Create your profile with your work email (${esc(m.email)}). Your Safar Pro features are included. Trips you mark as business trips, and the cost reports you submit, are shared with ${esc(org.name || 'your company')}; personal trips are not.</p><p><a href="${link}">Join ${esc(org.name || 'your company')} on Safar</a></p><p>This invitation works for 30 days. If you were not expecting it, you can ignore this email.</p><p>Safar · Amova Solutions Inc. · support@amovasolutions.com</p>`;
-  const r = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: 'Bearer ' + env.RESEND_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: 'Safar <support@amovasolutions.com>', reply_to: 'support@amovasolutions.com', to: [m.email], subject: `Join ${org.name || 'your company'} on Safar`, html }) });
-  return r.ok;
+async function bizPlan(env, org) { const r = JSON.parse(await env.SAFAR.get('pro:' + (org.payer || org.owner)) || 'null') || {}; return { active: r.plan === 'business' && r.until > Date.now(), until: r.until || 0, canceled: !!r.canceled }; }
+const roleOf = (o, uid) => o.owner === uid ? 'owner' : (o.members.find(m => m.uid === uid && m.status === 'active')?.role === 'coowner' ? 'coowner' : 'member');
+const orgOut = (o, uid) => { const admin = roleOf(o, uid) !== 'member';
+  return { id: o.id, name: o.name, address: o.address, country: o.country, taxId: o.taxId, costCentre: o.costCentre, approver: o.approver, currency: o.currency, owner: o.owner === uid, role: roleOf(o, uid), ownerName: o.ownerName || '', ownerEmail: admin ? o.ownerEmail || '' : undefined, payerIsOwner: (o.payer || o.owner) === o.owner,
+    members: admin ? o.members.map(m => ({ name: m.name, email: m.email, status: m.status, role: m.role || 'traveller', invitedAt: m.invitedAt, joinedAt: m.joinedAt || 0, link: m.status === 'invited' ? m.token : undefined })) : undefined, seats: SEATS }; };
+const escH = t => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function mailHtml({ pre, title, lines, cta, link, foot }) {   // Safar's branded email: navy band, the safar. wordmark, one teal button
+  return `<!doctype html><html><body style="margin:0;background:#eef1f5;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#0e1525">
+<div style="display:none;max-height:0;overflow:hidden">${escH(pre || title)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef1f5;padding:24px 0"><tr><td align="center">
+<table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#fff;border-radius:14px;overflow:hidden">
+<tr><td style="background:#0c1633;padding:22px 28px"><span style="font-size:26px;font-weight:700;color:#fff;letter-spacing:-.5px">safar</span><span style="font-size:26px;font-weight:700;color:#e9b452">.</span><span style="float:right;color:#9fb0d4;font-size:13px;line-height:34px">Safar Business</span></td></tr>
+<tr><td style="padding:28px 28px 8px"><h1 style="margin:0 0 14px;font-size:21px;line-height:1.3">${escH(title)}</h1>${lines.map(l => `<p style="margin:0 0 12px;font-size:15px;line-height:1.55;color:#33415c">${l}</p>`).join('')}
+${cta && link ? `<p style="margin:22px 0 8px"><a href="${link}" style="display:inline-block;background:#0b7d70;color:#fff;text-decoration:none;font-weight:600;font-size:15px;padding:12px 22px;border-radius:10px">${escH(cta)}</a></p><p style="margin:0 0 6px;font-size:12px;color:#667085;word-break:break-all">Or open this link: ${escH(link)}</p>` : ''}</td></tr>
+<tr><td style="padding:14px 28px 24px;border-top:1px solid #eef1f5;font-size:12px;line-height:1.5;color:#667085">${foot ? foot + '<br>' : ''}Safar · Amova Solutions Inc. · 1500 Fern Street, North Vancouver, BC · <a href="mailto:support@amovasolutions.com" style="color:#667085">support@amovasolutions.com</a></td></tr>
+</table></td></tr></table></body></html>`; }
+async function sendMail(env, to, subject, html) {   // through Resend, from support@amovasolutions.com; quiet if email is not set up
+  if (!env.RESEND_KEY || !to || !to.length) return false;
+  try { const r = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: 'Bearer ' + env.RESEND_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: 'Safar <support@amovasolutions.com>', reply_to: 'support@amovasolutions.com', to: [].concat(to).slice(0, 20), subject, html }) }); return r.ok; } catch (e) { return false; }
 }
+const adminEmails = o => [o.ownerEmail, ...o.members.filter(m => m.role === 'coowner' && m.status === 'active').map(m => m.email)].filter(Boolean);
 async function session(req, env) {
   const t = (req.headers.get('Authorization') || '').replace(/^Bearer /, ''); const [uid, exp, sig] = t.split('.');
   if (!uid || !exp || !sig || +exp < Date.now() / 1000) return null;
@@ -146,14 +157,14 @@ export default {
       }
       if (p === '/admin/export') { if (overCap(req, 'export')) return tooMany(req, 'export');      // weekly off-site backup: users' trips, accounts and live trips, a page at a time (read-only)
         const k = req.headers.get('X-Admin-Key') || ''; if (!(k && await sha(k) === ADMIN_HASH) && !(await githubBackupJob(req))) return json(req, { error: 'not allowed' }, 403);
-        const prefix = url.searchParams.get('prefix') || ''; if (!['trip:', 'trip-prev:', 'user:', 'live:', 'pro:', 'cus:'].includes(prefix)) return json(req, { error: 'bad prefix' }, 400);
+        const prefix = url.searchParams.get('prefix') || ''; if (!['trip:', 'trip-prev:', 'btrip:', 'user:', 'live:', 'pro:', 'cus:', 'org:', 'orgof:', 'orep:', 'obook:', 'rcpt:'].includes(prefix)) return json(req, { error: 'bad prefix' }, 400);
         const list = await raw.list({ prefix, limit: 200, cursor: url.searchParams.get('cursor') || undefined });
         const items = await Promise.all(list.keys.map(async x => ({ k: x.name, v: await raw.get(x.name), exp: x.expiration || null })));
         return json(req, { items, cursor: list.list_complete ? null : list.cursor });
       }
       if (p === '/admin/import' && req.method === 'POST') {   // restore from a backup (full admin key only)
         const k = req.headers.get('X-Admin-Key') || ''; if (!k || await sha(k) !== ADMIN_HASH) return json(req, { error: 'not allowed' }, 403);
-        const j = JSON.parse(await req.text()), items = (j.items || []).filter(x => /^(trip|trip-prev|user|live|pro|cus):/.test(x.k) && typeof x.v === 'string').slice(0, 200);
+        const j = JSON.parse(await req.text()), items = (j.items || []).filter(x => /^(trip|trip-prev|btrip|user|live|pro|cus|org|orgof|orep|obook|rcpt):/.test(x.k) && typeof x.v === 'string').slice(0, 200);
         const onlyMissing = j.onlyMissing !== false; let n = 0;
         for (const x of items) { if (onlyMissing && await raw.get(x.k) != null) continue; await raw.put(x.k, x.v, x.exp && x.exp > Date.now() / 1000 + 60 ? { expiration: x.exp } : undefined); n++; }
         return json(req, { restored: n });
@@ -256,16 +267,17 @@ export default {
         const prev = JSON.parse(await env.SAFAR.get('user:' + u.id) || 'null'); if (!prev || Date.now() - (prev.last || 0) > 86400000) await env.SAFAR.put('user:' + u.id, JSON.stringify({ ...u, since: prev?.since || Date.now(), last: Date.now() }));
         return json(req, { session: sess, user: u });
       }
-      if (p === '/me/trip' || p === '/me/trip/previous') {
+      if (p === '/me/trip' || p === '/me/trip/previous') {   // ?ws=biz is the Business section of the account; without it, the Personal one
+        const WP = url.searchParams.get('ws') === 'biz' ? 'b' : '';
         const uid = await session(req, env); if (!uid) return json(req, { error: 'not signed in' }, 401);
-        if (req.method === 'GET') { const t = await env.SAFAR.get((p.endsWith('previous') ? 'trip-prev:' : 'trip:') + uid); return json(req, t ? JSON.parse(t) : { trip: null, updated: 0 }); }
+        if (req.method === 'GET') { const t = await env.SAFAR.get(WP + (p.endsWith('previous') ? 'trip-prev:' : 'trip:') + uid); return json(req, t ? JSON.parse(t) : { trip: null, updated: 0 }); }
         if (req.method === 'PUT' && p === '/me/trip') {
           if (overCap(req, 'trip-put')) return tooMany(req, 'trip-put');
           const b = await req.text(); if (b.length > 2000000) return json(req, { error: 'trip too large' }, 413);
           const j = JSON.parse(b); if (!okTrip(j.trip)) return json(req, { error: 'not a Safar trip' }, 400);
-          const old = await env.SAFAR.get('trip:' + uid);
-          if (old) { const o = JSON.parse(old), was = o.trip?.cities?.length || 0, now = j.trip.cities.length; if ((was && !now) || Date.now() - (o.saved || 0) > 1800000) await env.SAFAR.put('trip-prev:' + uid, old); if (was && !now && !j.clear) return json(req, { ok: true, kept: true }); }
-          await env.SAFAR.put('trip:' + uid, JSON.stringify({ trip: j.trip, updated: +j.updated || Date.now(), saved: Date.now() })); return json(req, { ok: true });
+          const old = await env.SAFAR.get(WP + 'trip:' + uid);
+          if (old) { const o = JSON.parse(old), was = o.trip?.cities?.length || 0, now = j.trip.cities.length; if ((was && !now) || Date.now() - (o.saved || 0) > 1800000) await env.SAFAR.put(WP + 'trip-prev:' + uid, old); if (was && !now && !j.clear) return json(req, { ok: true, kept: true }); }
+          await env.SAFAR.put(WP + 'trip:' + uid, JSON.stringify({ trip: j.trip, updated: +j.updated || Date.now(), saved: Date.now() })); return json(req, { ok: true });
         }
       }
       if (p === '/pay/checkout' && req.method === 'POST') {   // a Safar-branded Stripe checkout for the signed-in user (payment links can't carry Safar's look)
@@ -320,45 +332,68 @@ export default {
         }
         return json(req, { ok: true, ignored: ev.type });
       }
-      if (p.startsWith('/org')) {   // Safar Business: company profile, travellers, invitations, shared trips and cost reports
+      if (p.startsWith('/org')) {   // Safar Business: company profile, owners, travellers, invitations, bookings, business trips and cost reports
         if (overCap(req, 'org')) return tooMany(req, 'org');
         if (!ORIGINS.includes(req.headers.get('Origin') || '')) return json(req, { error: 'not allowed' }, 403);
         const uid = await session(req, env); if (!uid) return json(req, { error: 'not signed in' }, 401);
         const me = JSON.parse(await env.SAFAR.get('user:' + uid) || 'null') || {}, body = req.method === 'GET' ? {} : await req.json().catch(() => ({}));
-        let org = await orgOf(env, uid); const save = o => env.SAFAR.put('org:' + o.id, JSON.stringify(o)), isOwner = org && org.owner === uid;
+        let org = await orgOf(env, uid); const save = o => env.SAFAR.put('org:' + o.id, JSON.stringify(o));
+        const role = org ? roleOf(org, uid) : '', isAdmin = role === 'owner' || role === 'coowner', isMain = role === 'owner';
         const mine = JSON.parse(await env.SAFAR.get('pro:' + uid) || 'null') || {}, hasBiz = mine.plan === 'business' && mine.until > Date.now();
+        const back = /^https:\/\/safar\.amovasolutions\.com\/(staging\/)?$/.test(body.back || '') ? body.back : 'https://safar.amovasolutions.com/';
         if (p === '/org' && req.method === 'GET') {
           if (!org) return json(req, { org: null, canCreate: hasBiz });
-          const b = await bizPlan(env, org); return json(req, { org: orgOut(org, uid), role: isOwner ? 'owner' : 'member', active: b.active, until: b.until, canceled: b.canceled });
+          if (isMain && !org.ownerEmail && me.email) { org.ownerEmail = normEmail(me.email); org.ownerName = me.name || ''; await save(org); }
+          const b = await bizPlan(env, org); return json(req, { org: orgOut(org, uid), role, active: b.active, until: b.until, canceled: b.canceled });
         }
-        if (p === '/org' && req.method === 'POST') {   // create or update the company profile (the Business subscriber only)
-          if (org && !isOwner) return json(req, { error: 'only the account owner can change the company profile' }, 403);
+        if (p === '/org' && req.method === 'POST') {   // create or update the company profile (owners)
+          if (org && !isAdmin) return json(req, { error: 'only the owners can change the company profile' }, 403);
           if (!org && !hasBiz) return json(req, { error: 'Safar Business is needed first' }, 402);
-          if (!org) { org = { id: b64u(crypto.getRandomValues(new Uint8Array(12))), owner: uid, members: [], created: Date.now() }; await env.SAFAR.put('orgof:' + uid, org.id); }
+          if (!org) { org = { id: b64u(crypto.getRandomValues(new Uint8Array(12))), owner: uid, payer: uid, ownerEmail: normEmail(me.email), ownerName: me.name || '', members: [], created: Date.now() }; await env.SAFAR.put('orgof:' + uid, org.id); }
           for (const k of ['name', 'address', 'country', 'taxId', 'costCentre', 'approver', 'currency']) if (k in body) org[k] = String(body[k] || '').slice(0, k === 'address' ? 300 : 120);
-          await save(org); return json(req, { org: orgOut(org, uid), role: 'owner' });
+          await save(org); return json(req, { org: orgOut(org, uid), role: roleOf(org, uid) });
         }
-        if (p === '/org/members' && req.method === 'POST') {   // add a traveller and invite them
-          if (!isOwner) return json(req, { error: 'only the account owner can add travellers' }, 403);
+        if (p === '/org/members' && req.method === 'POST') {   // add a traveller and invite them by email
+          if (!isAdmin) return json(req, { error: 'only the owners can add travellers' }, 403);
           if (!(await bizPlan(env, org)).active) return json(req, { error: 'the Safar Business plan is not active' }, 402);
           if (overCap(req, 'invite')) return tooMany(req, 'invite');
           const email = normEmail(body.email), name = String(body.name || '').trim().slice(0, 80);
           if (!name || !okEmail(email)) return json(req, { error: 'a name and a valid work email are needed' }, 400);
+          if (email === org.ownerEmail) return json(req, { error: 'that is the owner’s email' }, 409);
           let m = org.members.find(x => x.email === email);
-          if (!m) { if (org.members.length >= SEATS) return json(req, { error: `Safar Business covers up to ${SEATS} travellers` }, 409); m = { email, name, status: 'invited' }; org.members.push(m); }
+          if (!m) { if (org.members.length >= SEATS) return json(req, { error: `Safar Business covers up to ${SEATS} travellers` }, 409); m = { email, name, status: 'invited', role: 'traveller' }; org.members.push(m); }
           if (m.status === 'active') return json(req, { error: 'already on the team' }, 409);
           m.name = name; m.invitedAt = Date.now(); if (m.token) await env.SAFAR.delete('inv:' + m.token); m.token = b64u(crypto.getRandomValues(new Uint8Array(18)));
           await env.SAFAR.put('inv:' + m.token, JSON.stringify({ org: org.id, email }), { expirationTtl: 30 * 86400 }); await save(org);
-          const back = /^https:\/\/safar\.amovasolutions\.com\/(staging\/)?$/.test(body.back || '') ? body.back : 'https://safar.amovasolutions.com/', link = back + '?join=' + m.token;
-          const emailed = await inviteMail(env, org, m, link, me.name || me.email || 'Your company').catch(() => false);
+          const link = back + '?join=' + m.token, co = org.name || 'your company';
+          const emailed = await sendMail(env, email, `Join ${co} on Safar`, mailHtml({ pre: `${me.name || 'Your company'} added you to ${co} on Safar`, title: `You're invited to ${co} on Safar`,
+            lines: [`Hello ${escH(m.name)},`, `${escH(me.name || 'Your company')} has added you to <b>${escH(co)}</b>'s Safar Business account as a business traveller.`, `Create your profile with your work email, <b>${escH(email)}</b>. Safar Pro is included. Your account keeps two sections: <b>Personal</b> stays private, and <b>Business</b> trips and the cost reports you submit are shared with ${escH(co)}.`],
+            cta: `Join ${co}`, link, foot: 'This invitation works for 30 days. If you were not expecting it, you can ignore this email.' }));
           return json(req, { ok: true, link, emailed, org: orgOut(org, uid) });
         }
-        if (p === '/org/members' && req.method === 'DELETE') {
-          const email = normEmail(body.email);
-          if (!isOwner && !(org && email === normEmail(me.email))) return json(req, { error: 'not allowed' }, 403);   // the owner removes anyone; a traveller can leave
+        if (p === '/org/members' && req.method === 'DELETE') {   // owners remove anyone but the main owner; a person can always leave
+          const email = normEmail(body.email), self = email === normEmail(me.email);
+          if (!isAdmin && !(org && self)) return json(req, { error: 'not allowed' }, 403);
           const m = org.members.find(x => x.email === email); if (!m) return json(req, { error: 'not on the team' }, 404);
+          if (m.role === 'coowner' && !isMain && !self) return json(req, { error: 'only the main owner can remove a co-owner' }, 403);
           org.members = org.members.filter(x => x !== m); if (m.token) await env.SAFAR.delete('inv:' + m.token); if (m.uid) await env.SAFAR.delete('orgof:' + m.uid);
-          await save(org); return json(req, { ok: true, org: isOwner ? orgOut(org, uid) : null });
+          await save(org); return json(req, { ok: true, org: self ? null : orgOut(org, uid) });
+        }
+        if (p === '/org/coowner' && req.method === 'POST') {   // the main owner makes a joined traveller a co-owner, or back to a traveller
+          if (!isMain) return json(req, { error: 'only the main owner can change co-owners' }, 403);
+          const m = org.members.find(x => x.email === normEmail(body.email)); if (!m || m.status !== 'active') return json(req, { error: 'they need to join the team first' }, 409);
+          m.role = body.coowner === false ? 'traveller' : 'coowner'; await save(org);
+          if (m.role === 'coowner') await sendMail(env, m.email, `You are now a co-owner of ${org.name || 'your company'} on Safar`, mailHtml({ title: `You're a co-owner of ${org.name || 'your company'}`, lines: [`Hello ${escH(m.name)},`, `${escH(me.name || 'The owner')} made you a co-owner of <b>${escH(org.name || 'your company')}</b>'s Safar Business account. You can now add travellers, book travel and stays for them, and review their cost reports.`], cta: 'Open Safar', link: back }));
+          return json(req, { ok: true, org: orgOut(org, uid) });
+        }
+        if (p === '/org/transfer' && req.method === 'POST') {   // the main owner hands the account to a co-owner and stays on as a co-owner
+          if (!isMain) return json(req, { error: 'only the main owner can hand over the account' }, 403);
+          const m = org.members.find(x => x.email === normEmail(body.email) && x.role === 'coowner' && x.status === 'active'); if (!m) return json(req, { error: 'make them a co-owner first' }, 409);
+          org.members = org.members.filter(x => x !== m);
+          org.members.push({ email: org.ownerEmail || normEmail(me.email), name: org.ownerName || me.name || 'Former owner', status: 'active', role: 'coowner', uid, joinedAt: org.created || Date.now() });
+          Object.assign(org, { owner: m.uid, ownerEmail: m.email, ownerName: m.name }); await save(org);
+          await sendMail(env, m.email, `You are now the owner of ${org.name || 'your company'} on Safar`, mailHtml({ title: `You're now the main owner`, lines: [`Hello ${escH(m.name)},`, `${escH(me.name || 'The previous owner')} handed <b>${escH(org.name || 'your company')}</b>'s Safar Business account to you. They stay on as a co-owner until you remove them. The plan stays paid by the original subscription until it is cancelled.`], cta: 'Open Safar', link: back }));
+          return json(req, { ok: true, org: orgOut(org, uid), role: 'coowner' });
         }
         if (p === '/org/join' && req.method === 'POST') {   // a traveller accepts the invitation with the work email it was sent to
           const inv = JSON.parse(await env.SAFAR.get('inv:' + String(body.token || '').slice(0, 60)) || 'null'); if (!inv) return json(req, { error: 'this invitation has expired or was withdrawn; ask your company for a new one' }, 404);
@@ -368,45 +403,76 @@ export default {
           const m = o.members.find(x => x.email === inv.email); if (!m) return json(req, { error: 'this invitation was withdrawn' }, 404);
           Object.assign(m, { status: 'active', uid, joinedAt: Date.now(), name: m.name || me.name }); delete m.token;
           await env.SAFAR.delete('inv:' + body.token); await env.SAFAR.put('orgof:' + uid, o.id); await save(o);
+          await sendMail(env, adminEmails(o), `${m.name} joined ${o.name || 'your company'} on Safar`, mailHtml({ title: `${m.name} joined your team`, lines: [`${escH(m.name)} (${escH(m.email)}) accepted the invitation and is now a business traveller on <b>${escH(o.name || 'your company')}</b>'s Safar account.`], cta: 'Open Safar Business', link: back }));
           return json(req, { ok: true, org: orgOut(o, uid), role: 'member' });
         }
         if (!org) return json(req, { error: 'not on a company account' }, 404);
-        if (p === '/org/trips' && req.method === 'GET') {   // the business trips of the team (owner only): only trips the traveller marked as business
-          if (!isOwner) return json(req, { error: 'only the account owner can see team trips' }, 403);
-          const people = [{ uid: org.owner, name: me.name || 'You', email: me.email || '' }, ...org.members.filter(m => m.status === 'active').map(m => ({ uid: m.uid, name: m.name, email: m.email }))];
+        if (p === '/org/trips' && req.method === 'GET') {   // the team's business trips (owners only): only each person's Business section
+          if (!isAdmin) return json(req, { error: 'only the owners can see team trips' }, 403);
+          const people = [{ uid: org.owner, name: org.ownerName || 'Owner', email: org.ownerEmail || '' }, ...org.members.filter(m => m.status === 'active').map(m => ({ uid: m.uid, name: m.name, email: m.email }))];
           const out = [];
-          for (const x of people) { const t = JSON.parse(await env.SAFAR.get('trip:' + x.uid) || 'null')?.trip; if (!t || !t.business || !(t.cities || []).length) continue;
+          for (const x of people) { const bt = JSON.parse(await env.SAFAR.get('btrip:' + x.uid) || 'null')?.trip, lt = bt ? null : JSON.parse(await env.SAFAR.get('trip:' + x.uid) || 'null')?.trip, t = bt || (lt && lt.business ? lt : null);
+            if (!t || !(t.cities || []).length) continue;
             out.push({ name: x.name, email: x.email, cities: t.cities.map(c => ({ name: c.name, nights: c.nights })), start: t.settings?.startDate || '', purpose: String(t.purpose || '').slice(0, 200) }); }
           return json(req, { trips: out });
         }
+        const BK = 'obook:' + org.id, books = JSON.parse(await env.SAFAR.get(BK) || '[]'), myEmail = normEmail(me.email);
+        if (p === '/org/bookings' && req.method === 'GET') return json(req, { bookings: isAdmin ? books : books.filter(b => b.email === myEmail) });
+        if (p === '/org/bookings' && req.method === 'POST') {   // an owner records a flight, stay or car booked for a traveller; the plan itself stays the traveller's
+          if (!isAdmin) return json(req, { error: 'only the owners can book for travellers' }, 403);
+          const email = normEmail(body.email), who = email === org.ownerEmail ? { name: org.ownerName, email } : org.members.find(m => m.email === email); if (!who) return json(req, { error: 'choose a traveller on the team' }, 400);
+          const kind = ['flight', 'hotel', 'car', 'train', 'other'].includes(body.kind) ? body.kind : 'other', S2 = v => String(v || '').slice(0, 160);
+          const b = { id: b64u(crypto.getRandomValues(new Uint8Array(9))), email, name: who.name, kind, title: S2(body.title), city: S2(body.city), from: S2(body.from), to: S2(body.to), start: S2(body.start).slice(0, 16), end: S2(body.end).slice(0, 16), ref: S2(body.ref), provider: S2(body.provider), address: S2(body.address), cost: Math.round((+body.cost || 0) * 100) / 100, cur: String(body.cur || 'USD').slice(0, 3).toUpperCase(), notes: String(body.notes || '').slice(0, 400), by: me.name || '', at: Date.now(), added: false };
+          if (!b.title) return json(req, { error: 'add what was booked' }, 400);
+          books.unshift(b); await env.SAFAR.put(BK, JSON.stringify(books.slice(0, 1000)));
+          const what = { flight: 'a flight', hotel: 'a stay', car: 'a rental car', train: 'a train', other: 'travel' }[kind];
+          await sendMail(env, email, `${org.name || 'Your company'} booked ${what} for you`, mailHtml({ title: `${org.name || 'Your company'} booked ${what} for you`, lines: [`Hello ${escH(who.name)},`, `<b>${escH(b.title)}</b>${b.start ? ' · ' + escH(b.start.replace('T', ' ')) : ''}${b.end ? ' to ' + escH(b.end.replace('T', ' ')) : ''}${b.ref ? ' · confirmation ' + escH(b.ref) : ''}`, 'Open Safar and switch to Business to add it to your trip. How you plan your days is up to you.'], cta: 'Open Safar', link: back }));
+          return json(req, { ok: true, booking: b });
+        }
+        const bm = p.match(/^\/org\/bookings\/([\w-]{6,20})$/);
+        if (bm && (req.method === 'PUT' || req.method === 'DELETE')) { const b = books.find(x => x.id === bm[1]); if (!b) return json(req, { error: 'booking not found' }, 404);
+          if (req.method === 'DELETE') { if (!isAdmin) return json(req, { error: 'not allowed' }, 403); await env.SAFAR.put(BK, JSON.stringify(books.filter(x => x !== b))); return json(req, { ok: true }); }
+          if (b.email !== myEmail && !isAdmin) return json(req, { error: 'not allowed' }, 403); b.added = !!body.added; await env.SAFAR.put(BK, JSON.stringify(books)); return json(req, { ok: true, booking: b }); }
+        if (p === '/org/receipts' && req.method === 'POST') {   // a receipt photo or PDF for a cost report (up to about 1.5 MB)
+          const d = String(body.data || ''); if (!/^data:(image\/(jpeg|png|webp)|application\/pdf);base64,[A-Za-z0-9+/=]+$/.test(d) || d.length > 2100000) return json(req, { error: 'a receipt must be a photo or PDF under 1.5 MB' }, 400);
+          const id = b64u(crypto.getRandomValues(new Uint8Array(12))); await env.SAFAR.put('rcpt:' + id, JSON.stringify({ org: org.id, uid, data: d, name: String(body.name || 'receipt').slice(0, 80), at: Date.now() })); return json(req, { ok: true, id });
+        }
+        const rcm = p.match(/^\/org\/receipts\/([\w-]{10,24})$/);
+        if (rcm && req.method === 'GET') { const r = JSON.parse(await env.SAFAR.get('rcpt:' + rcm[1]) || 'null'); if (!r || r.org !== org.id || (!isAdmin && r.uid !== uid)) return json(req, { error: 'not found' }, 404); return json(req, { data: r.data, name: r.name }); }
         const RK = 'orep:' + org.id, reps = JSON.parse(await env.SAFAR.get(RK) || '[]');
-        if (p === '/org/reports' && req.method === 'GET') return json(req, { reports: isOwner ? reps : reps.filter(r => r.uid === uid) });
+        if (p === '/org/reports' && req.method === 'GET') return json(req, { reports: isAdmin ? reps : reps.filter(r => r.uid === uid) });
         if (p === '/org/reports' && req.method === 'POST') {   // a traveller submits a trip cost report to the company
-          const items = (Array.isArray(body.items) ? body.items : []).slice(0, 200).map(i => ({ date: String(i.date || '').slice(0, 10), cat: String(i.cat || 'Other').slice(0, 30), desc: String(i.desc || '').slice(0, 160), amount: Math.round((+i.amount || 0) * 100) / 100, cur: String(i.cur || 'USD').slice(0, 3).toUpperCase(), card: String(i.card || '').slice(0, 40) })).filter(i => i.amount > 0);
+          const items = (Array.isArray(body.items) ? body.items : []).slice(0, 200).map(i => ({ date: String(i.date || '').slice(0, 10), cat: String(i.cat || 'Other').slice(0, 30), desc: String(i.desc || '').slice(0, 160), amount: Math.round((+i.amount || 0) * 100) / 100, cur: String(i.cur || 'USD').slice(0, 3).toUpperCase(), card: String(i.card || '').slice(0, 40), tax: Math.round((+i.tax || 0) * 100) / 100, receipt: /^[\w-]{10,24}$/.test(i.receipt || '') ? i.receipt : '' })).filter(i => i.amount > 0);
           if (!items.length) return json(req, { error: 'add at least one expense' }, 400);
-          const r = { id: b64u(crypto.getRandomValues(new Uint8Array(9))), uid, name: me.name || '', email: me.email || '', title: String(body.title || 'Business trip').slice(0, 120), purpose: String(body.purpose || '').slice(0, 300), from: String(body.from || '').slice(0, 10), to: String(body.to || '').slice(0, 10), currency: String(body.currency || items[0].cur).slice(0, 3).toUpperCase(), items, status: 'submitted', submitted: Date.now(), note: '' };
+          const r = { id: b64u(crypto.getRandomValues(new Uint8Array(9))), uid, name: me.name || '', email: me.email || '', title: String(body.title || 'Business trip').slice(0, 120), purpose: String(body.purpose || '').slice(0, 300), from: String(body.from || '').slice(0, 10), to: String(body.to || '').slice(0, 10), cities: String(body.cities || '').slice(0, 200), currency: String(body.currency || items[0].cur).slice(0, 3).toUpperCase(), items, status: 'submitted', submitted: Date.now(), note: '' };
           r.total = Math.round(items.filter(i => i.cur === r.currency).reduce((a, i) => a + i.amount, 0) * 100) / 100;
-          reps.unshift(r); await env.SAFAR.put(RK, JSON.stringify(reps.slice(0, 500))); return json(req, { ok: true, report: r });
+          reps.unshift(r); await env.SAFAR.put(RK, JSON.stringify(reps.slice(0, 500)));
+          const to = [...new Set([org.approver, ...adminEmails(org)].map(normEmail).filter(okEmail))];
+          await sendMail(env, to, `Cost report from ${r.name}: ${r.title}`, mailHtml({ title: `New cost report from ${r.name}`, lines: [`<b>${escH(r.title)}</b>${r.from ? ' · ' + escH(r.from) + (r.to ? ' to ' + escH(r.to) : '') : ''}`, `${items.length} expense${items.length > 1 ? 's' : ''} · total <b>${r.currency} ${r.total.toFixed(2)}</b>${r.purpose ? ' · ' + escH(r.purpose) : ''}`, 'Open Safar Business to review it, approve it and download the PDF.'], cta: 'Review the report', link: back }));
+          return json(req, { ok: true, report: r });
         }
         const rm = p.match(/^\/org\/reports\/([\w-]{6,20})$/);
-        if (rm && req.method === 'PUT') {   // the owner approves, marks paid or returns a report
-          if (!isOwner) return json(req, { error: 'only the account owner can review reports' }, 403);
+        if (rm && req.method === 'PUT') {   // an owner approves, marks paid or returns a report
+          if (!isAdmin) return json(req, { error: 'only the owners can review reports' }, 403);
           const r = reps.find(x => x.id === rm[1]); if (!r) return json(req, { error: 'report not found' }, 404);
           if (!['approved', 'paid', 'returned'].includes(body.status)) return json(req, { error: 'unknown status' }, 400);
-          r.status = body.status; r.note = String(body.note || '').slice(0, 300); r.reviewed = Date.now(); await env.SAFAR.put(RK, JSON.stringify(reps)); return json(req, { ok: true, report: r });
+          r.status = body.status; r.note = String(body.note || '').slice(0, 300); r.reviewed = Date.now(); r.reviewer = me.name || ''; await env.SAFAR.put(RK, JSON.stringify(reps));
+          const word = { approved: 'approved', paid: 'paid', returned: 'returned to you' }[r.status];
+          await sendMail(env, r.email, `Your cost report was ${word}: ${r.title}`, mailHtml({ title: `Your cost report was ${word}`, lines: [`<b>${escH(r.title)}</b> · ${r.currency} ${r.total.toFixed(2)}`, r.note ? `Note from ${escH(me.name || 'your company')}: ${escH(r.note)}` : '', r.status === 'returned' ? 'Open Safar to correct it and submit it again.' : ''].filter(Boolean), cta: 'Open Safar', link: back }));
+          return json(req, { ok: true, report: r });
         }
         return json(req, { error: 'not found' }, 404);
       }
       if (p === '/me/pro') {
         const uid = await session(req, env); if (!uid) return json(req, { error: 'not signed in' }, 401);
         const r = JSON.parse(await env.SAFAR.get('pro:' + uid) || 'null'); if (r && r.until > Date.now()) return json(req, { pro: true, plan: r.plan, until: r.until, canceled: !!r.canceled });
-        const og = await orgOf(env, uid); if (og && og.owner !== uid) { const b = await bizPlan(env, og); if (b.active) return json(req, { pro: true, plan: 'team', until: b.until, org: og.name || 'your company' }); }
+        const og = await orgOf(env, uid); if (og) { const b = await bizPlan(env, og); if (b.active) return json(req, { pro: true, plan: og.owner === uid && (og.payer || og.owner) === uid ? 'business' : 'team', until: b.until, org: og.name || 'your company' }); }
         return json(req, r ? { pro: false, plan: r.plan, until: r.until, canceled: !!r.canceled } : { pro: false });
       }
       if (p === '/me' && req.method === 'DELETE') {
         const uid = await session(req, env); if (!uid) return json(req, { error: 'not signed in' }, 401);
         const og = await orgOf(env, uid); if (og && og.owner !== uid) { og.members = og.members.filter(m => m.uid !== uid); await env.SAFAR.put('org:' + og.id, JSON.stringify(og)); }
-        await Promise.all(['trip:', 'trip-prev:', 'user:', 'orgof:'].map(k => env.SAFAR.delete(k + uid)));   // Pro purchase records (pro:, cus:) are kept for refunds and tax records return json(req, { ok: true, deleted: true });
+        await Promise.all(['trip:', 'trip-prev:', 'btrip:', 'btrip-prev:', 'user:', 'orgof:'].map(k => env.SAFAR.delete(k + uid)));   // Pro purchase records (pro:, cus:) are kept for refunds and tax records return json(req, { ok: true, deleted: true });
       }
       if (p === '/cache/overpass' && req.method === 'POST') {
         if (overCap(req, 'overpass')) return tooMany(req, 'overpass');

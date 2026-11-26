@@ -429,6 +429,90 @@ test('Business trips and payment information: business details and cards (last 4
   expect(errors).toEqual([]);
 });
 
+test('Safar Business: co-owners, handing over ownership, and booking travel for a traveller', async ({ page }) => {
+  stagingOnly();
+  const errors = await offline(page); const API = '**/safar-api.hamid-ebb.workers.dev';
+  let org = { id: 'o1', name: 'Amova', owner: true, role: 'owner', ownerName: 'Hamid', ownerEmail: 'hamid@amova.com', seats: 10, members: [{ name: 'Roja', email: 'roja@amova.com', status: 'active', role: 'traveller' }] }, co = null, xfer = null, booked = null;
+  await page.route(API + '/org', r => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ org, role: org.role, active: true }) }));
+  await page.route(API + '/org/coowner', r => { co = r.request().postDataJSON(); org = { ...org, members: [{ ...org.members[0], role: co.coowner ? 'coowner' : 'traveller' }] }; r.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true, org }) }); });
+  await page.route(API + '/org/transfer', r => { xfer = r.request().postDataJSON(); org = { ...org, owner: false, role: 'coowner', ownerName: 'Roja', ownerEmail: 'roja@amova.com', members: [{ name: 'Hamid', email: 'hamid@amova.com', status: 'active', role: 'coowner' }] }; r.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true, org, role: 'coowner' }) }); });
+  await page.route(API + '/org/bookings', r => { if (r.request().method() === 'POST') { booked = r.request().postDataJSON(); return r.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true, booking: { ...booked, id: 'b1abcdef', name: 'Roja', added: false } }) }); } r.fulfill({ contentType: 'application/json', body: JSON.stringify({ bookings: [] }) }); });
+  await open(page);
+  await page.evaluate(() => { localStorage.setItem(SESS_KEY, encodeURIComponent('google:42') + '.9999999999.sig'); openTeam('team'); });
+  await expect(page.locator('#teamIn')).toContainText('Main owner');
+  await page.$eval('[data-tco="roja@amova.com|1"]', e => e.click());
+  await expect.poll(() => co).toMatchObject({ email: 'roja@amova.com', coowner: true }); await expect(page.locator('[data-txfer]')).toHaveCount(1);
+  await page.$eval('[data-ttab="book"]', e => e.click()); await expect(page.locator('#teamIn')).toContainText('No bookings yet'); await page.$eval('[data-bknew]', e => e.click()); await page.waitForSelector('#bk_city');
+  await expect(page.locator('#teamIn')).toContainText('Book for a traveller');
+  await page.$eval('#bk_city', e => { e.value = 'Rome'; e.dispatchEvent(new Event('input', { bubbles: true })); });
+  await expect(page.locator('#teamIn a', { hasText: 'Booking.com' })).toHaveAttribute('href', /ss=Rome/);
+  await page.$eval('#bk_title', e => { e.value = 'Hotel Artemide'; e.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.$eval('#bk_cost', e => { e.value = '600'; e.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.$eval('[data-bksave]', e => e.click());
+  await expect.poll(() => booked).not.toBeNull(); expect(booked).toMatchObject({ kind: 'hotel', city: 'Rome', title: 'Hotel Artemide', cost: '600', email: 'roja@amova.com' });
+  await expect(page.locator('#teamIn')).toContainText('Hotel Artemide');
+  await page.$eval('[data-ttab="team"]', e => e.click());
+  await page.$eval('[data-txfer]', e => e.click()); await page.$eval('[data-txfer]', e => e.click());
+  await expect.poll(() => xfer).toMatchObject({ email: 'roja@amova.com' });
+  await expect(page.locator('#teamIn')).toContainText('Co-owner'); await expect(page.locator('#teamIn')).toContainText('Roja');
+  expect(errors).toEqual([]);
+});
+
+test('Safar Business: a traveller keeps Personal and Business apart, adds a company booking and attaches a receipt', async ({ page }) => {
+  stagingOnly();
+  const errors = await offline(page); const API = '**/safar-api.hamid-ebb.workers.dev';
+  const org = { id: 'o1', name: 'Amova', owner: false, role: 'member', ownerName: 'Hamid', seats: 10 }; let put = null, up = null, sent = null;
+  await page.route(API + '/org', r => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ org, role: 'member', active: true }) }));
+  await page.route(API + '/org/bookings', r => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ bookings: [{ id: 'b1abcdef', email: 'roja@amova.com', name: 'Roja', kind: 'car', title: 'Hertz compact', city: 'Rome', start: '2026-12-01T10:00', cost: 90, cur: 'EUR', added: false }] }) }));
+  await page.route(API + '/org/bookings/b1abcdef', r => { put = r.request().postDataJSON(); r.fulfill({ contentType: 'application/json', body: '{"ok":true}' }); });
+  await page.route(API + '/org/receipts', r => { up = r.request().postDataJSON(); r.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true, id: 'rc1234567890' }) }); });
+  await page.route(API + '/org/reports', r => { if (r.request().method() === 'POST') { sent = r.request().postDataJSON(); return r.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true, report: { id: 'r9abcdef', title: sent.title, items: sent.items, currency: sent.currency, total: 90, status: 'submitted' } }) }); } r.fulfill({ contentType: 'application/json', body: '{"reports":[]}' }); });
+  await page.route(API + '/me/trip**', r => r.fulfill({ contentType: 'application/json', body: '{"trip":null}' }));
+  await open(page);
+  await page.evaluate(() => { localStorage.setItem(SESS_KEY, encodeURIComponent('microsoft:7') + '.9999999999.sig'); S.account = { name: 'Roja', email: 'roja@amova.com' }; S.cities = [{ id: 'cP', name: 'Lisbon', lat: 38.7, lng: -9.1, nights: 2 }]; saveNow(); keepOrg({ org: { id: 'o1', name: 'Amova', role: 'member', seats: 10 }, role: 'member', active: true }); });
+  await expect(page.locator('#wsBtn')).toBeVisible(); await expect(page.locator('#wsBtn')).toContainText('Personal');
+  await page.$eval('#wsBtn', e => e.click()); await page.waitForLoadState('load'); await page.waitForTimeout(800);
+  await expect(page.locator('#wsBtn')).toContainText('Business');
+  expect(await page.evaluate(() => [WS, cities().length, JSON.parse(localStorage.getItem(SKEY)).cities.length])).toEqual(['biz', 0, 1]);
+  await page.evaluate(() => { localStorage.setItem(SESS_KEY, encodeURIComponent('microsoft:7') + '.9999999999.sig'); S.account = { name: 'Roja', email: 'roja@amova.com' }; keepOrg({ org: { id: 'o1', name: 'Amova', role: 'member', seats: 10 }, role: 'member', active: true }); });
+  await page.evaluate(() => openTeam('book'));
+  await expect(page.locator('#teamIn')).toContainText('Hertz compact'); await expect(page.locator('[data-bkadd]')).toHaveCount(1);
+  await page.$eval('[data-bkadd]', e => e.click());
+  await expect.poll(() => put).toMatchObject({ added: true }); await expect(page.locator('#teamIn')).toContainText('In the trip');
+  expect(await page.evaluate(() => S.cobook.map(b => b.title))).toEqual(['Hertz compact']);
+  await page.$eval('[data-ttab="reports"]', e => e.click()); await expect(page.locator('#teamIn')).toContainText('not submitted a cost report');
+  await expect(async () => { await page.$eval('[data-rnew]', e => e.click()); await expect(page.locator('#teamIn')).toContainText('Paid by company', { timeout: 1000 }); }).toPass({ timeout: 8000 });
+  await expect(page.locator('#teamIn')).toContainText('Paid by company');
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+  await page.setInputFiles('#teamIn [data-xrc="0"]', { name: 'taxi.png', mimeType: 'image/png', buffer: png });
+  await expect.poll(() => up?.data?.slice(0, 15)).toBe('data:image/jpeg');
+  await expect(page.locator('#teamIn')).toContainText('✓ Receipt');
+  await page.$eval('[data-rsend]', e => e.click());
+  await expect.poll(() => sent).not.toBeNull(); expect(sent.items[0]).toMatchObject({ desc: 'Hertz compact', amount: '90', card: 'Paid by company', receipt: 'rc1234567890' }); expect(sent.items[0].rdata).toBeUndefined();
+  await page.$eval('#wsBtn', e => e.click()); await page.waitForLoadState('load'); await page.waitForTimeout(800);
+  expect(await page.evaluate(() => [WS, cities().map(c => c.name)])).toEqual(['me', ['Lisbon']]);
+  expect(errors).toEqual([]);
+});
+
+test('Cost reports without a company account: save, print to PDF and CSV', async ({ page }) => {
+  stagingOnly();
+  const errors = await offline(page);
+  await open(page);
+  await page.evaluate(() => { BIZ.on = true; BIZ.company = 'Nexen Biosystems'; BIZ.taxId = 'GST 123'; saveBiz(); S.cities = [{ id: 'c1', name: 'Rome', lat: 41.9, lng: 12.5, nights: 3 }]; S.settings.startDate = '2026-12-01'; saveNow(); openTeam('local'); });
+  await page.$eval('[data-rnew]', e => e.click());
+  await page.$eval('#teamIn [data-xk="amount"]', e => { e.value = '450'; e.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.$eval('#teamIn [data-xk="tax"]', e => { e.value = '40'; e.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.$eval('[data-rsave]', e => e.click());
+  await expect(page.locator('#teamIn')).toContainText('Trip to Rome'); await expect(page.locator('#teamIn')).toContainText('Saved');
+  const html = await page.evaluate(() => reportHtml(LREP[0], { name: BIZ.company, taxId: BIZ.taxId }));
+  for (const t of ['Nexen Biosystems', 'Trip to Rome', 'Summary by category', 'includes tax', '450.00', 'Approval', 'safar.amovasolutions.com']) expect(html).toContain(t);
+  await page.$eval('[data-rpdf]', e => e.click());
+  await expect.poll(() => page.evaluate(() => document.querySelector('#printFrame')?.contentDocument?.body?.textContent || '')).toContain('Trip to Rome');
+  const dl = page.waitForEvent('download'); await page.$eval('[data-rlcsv]', e => e.click()); expect((await dl).suggestedFilename()).toMatch(/\.csv$/);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('safar.reports')).length)).toBe(1);
+  expect(errors).toEqual([]);
+});
+
 test('Safar Business: the owner adds a traveller, sees reports and downloads them; a traveller submits a cost report', async ({ page }) => {
   stagingOnly();
   const errors = await offline(page);
