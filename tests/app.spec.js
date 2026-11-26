@@ -428,3 +428,29 @@ test('Business trips and payment information: business details and cards (last 4
   expect(await page.$eval('#paySum', e => e.textContent)).toContain('1 card');
   expect(errors).toEqual([]);
 });
+
+test('Safar Business: the owner adds a traveller, sees reports and downloads them; a traveller submits a cost report', async ({ page }) => {
+  stagingOnly();
+  const errors = await offline(page);
+  let org = { id: 'o1', name: 'Amova Solutions Inc.', owner: true, seats: 10, members: [] }, added = null, sent = null;
+  const R = [{ id: 'r1abcdef', name: 'Roja', email: 'roja@amova.com', title: 'Trip to Rome', purpose: 'Client', from: '2026-12-01', to: '2026-12-04', currency: 'EUR', total: 510.5, status: 'submitted', submitted: Date.now(), items: [{ date: '2026-12-01', cat: 'Hotel', desc: 'Hotel', amount: 450, cur: 'EUR', card: '' }] }];
+  await page.route('**/safar-api.hamid-ebb.workers.dev/org', r => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ org, role: 'owner', active: true }) }));
+  await page.route('**/safar-api.hamid-ebb.workers.dev/org/members', r => { added = r.request().postDataJSON(); org = { ...org, members: [{ name: added.name, email: added.email, status: 'invited', link: 'tok1234567890' }] }; r.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true, link: 'x?join=tok1234567890', emailed: true, org }) }); });
+  await page.route('**/safar-api.hamid-ebb.workers.dev/org/reports', r => { if (r.request().method() === 'POST') { sent = r.request().postDataJSON(); return r.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true, report: { ...R[0], id: 'r2abcdef', title: sent.title, total: 120, items: sent.items } }) }); } r.fulfill({ contentType: 'application/json', body: JSON.stringify({ reports: R }) }); });
+  await open(page);
+  await page.evaluate(() => { localStorage.setItem(SESS_KEY, encodeURIComponent('google:42') + '.9999999999.sig'); openTeam('team'); });
+  await expect(page.locator('#teamIn')).toContainText('0 of 10 travellers');
+  await page.fill('#tmName', 'Sara Ahmadi'); await page.fill('#tmEmail', 'sara@amova.com'); await page.$eval('[data-tadd]', e => e.click());
+  await expect(page.locator('#teamIn')).toContainText('sara@amova.com');
+  expect(added).toMatchObject({ name: 'Sara Ahmadi', email: 'sara@amova.com' });
+  await page.$eval('[data-ttab="reports"]', e => e.click());
+  await expect(page.locator('#teamIn')).toContainText('Trip to Rome');
+  const dl = page.waitForEvent('download'); await page.$eval('[data-rcsv]', e => e.click()); expect((await dl).suggestedFilename()).toMatch(/^safar-cost-reports-.*\.csv$/);
+  await page.$eval('[data-rnew]', e => e.click());
+  await page.$eval('#teamIn [data-xk="desc"]', e => { e.value = 'Taxi to client'; e.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.$eval('#teamIn [data-xk="amount"]', e => { e.value = '120'; e.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.$eval('[data-rsend]', e => e.click());
+  await expect.poll(() => sent).not.toBeNull();
+  expect(sent.items[0]).toMatchObject({ desc: 'Taxi to client', amount: '120' });
+  expect(errors).toEqual([]);
+});
