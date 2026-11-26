@@ -558,3 +558,14 @@ test('Safar Business: the owner adds a traveller, sees reports and downloads the
   expect(sent.items[0]).toMatchObject({ desc: 'Taxi to client', amount: '120' });
   expect(errors).toEqual([]);
 });
+test('Safar Business is offered in Settings and on the upgrade screen', async ({ page }) => {
+  const errors = await offline(page); await open(page);
+  await page.evaluate(() => { localStorage.setItem(SESS_KEY, encodeURIComponent('google:1') + '.9999999999.sig'); renderPro(); });
+  await expect(page.locator('#proBox')).toContainText('Safar Business');
+  await page.evaluate(() => openPaywall());
+  await expect(page.locator('#proIn')).toContainText('For companies: Safar Business');
+  await page.$eval('#proIn [data-bizplan]', e => e.click());
+  await expect(page.locator('#teamSheet')).toHaveClass(/on/);
+  await expect(page.locator('#teamIn')).toContainText('US$175');
+  expect(errors.filter(e => !/503|offline/.test(e))).toEqual([]);
+});
