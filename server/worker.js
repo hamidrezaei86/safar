@@ -8,6 +8,7 @@ import { mcp } from './mcp.js';
 // - /err: receives short crash notes from the app (message and code location only) so problems get fixed
 // - /mcp: the Safar connector for Claude and ChatGPT (see mcp.js)
 // - /ev, /feedback: anonymous usage counts and in-app feedback; /admin shows them (admin key)
+// - /tours: tours and tickets from Viator's partner API (when its key is set)
 // - /transit/near: live public transport departures near a point (Transit API, when its key is set; kept under the free 1,500 calls a month)
 // - /hotel-rates: live room prices for the trip dates (LiteAPI, when its key is set)
 // - /admin/export, /admin/import: weekly off-site backup and restore (admin keys only)
@@ -32,6 +33,20 @@ async function skey(env) { if (KEY) return KEY; KEY = env.SESSION_KEY || await e
 const SEATS = 10, normEmail = e => String(e || '').trim().toLowerCase(), okEmail = e => /^[^@\s]{1,64}@[^@\s]{1,190}\.[a-z]{2,}$/i.test(e);
 async function orgOf(env, uid) { const id = await env.SAFAR.get('orgof:' + uid); return id ? JSON.parse(await env.SAFAR.get('org:' + id) || 'null') : null; }
 async function bizPlan(env, org) { const r = JSON.parse(await env.SAFAR.get('pro:' + (org.payer || org.owner)) || 'null') || {}; return { active: r.plan === 'business' && r.until > Date.now(), until: r.until || 0, canceled: !!r.canceled }; }
+// Stripe payments: Safar's own payment links and prices (only these unlock Pro or Business)
+const SAFAR_LINKS = ['plink_1UfbLM2ZaGvtISUkKjhAzgFE', 'plink_1UfbLN2ZaGvtISUkYGQaYqXQ', 'plink_1UfwNn2ZaGvtISUkumOH04zO'];
+const SAFAR_PRICES = ['price_1UfbLC2ZaGvtISUkKaQ2ZZad', 'price_1UfbLD2ZaGvtISUkSwzetuvG', 'price_1UfwNg2ZaGvtISUksqowJxHP'];
+const STRIPE_IPS = ['3.18.12.63', '3.130.192.231', '13.235.14.237', '13.235.122.149', '18.211.135.69', '35.154.171.200', '52.15.183.38', '54.88.130.119', '54.88.130.237', '54.187.174.169', '54.187.205.235', '54.187.216.72'];
+let ipCache = null;
+async function stripeIps(env) {   // Stripe's published webhook addresses, refreshed daily, with the known list as a fallback
+  if (ipCache && ipCache.at > Date.now() - 864e5) return ipCache.ips;
+  let ips = STRIPE_IPS; try { const r = await fetch('https://stripe.com/files/ips/ips_webhooks.json', { cf: { cacheTtl: 86400 } }); const j = await r.json(); if (Array.isArray(j.WEBHOOKS) && j.WEBHOOKS.length) ips = j.WEBHOOKS; } catch (x) {}
+  ipCache = { ips, at: Date.now() }; return ips; }
+function ours(o, type) {   // is this Stripe object a purchase of Safar Pro, Trip Pass or Business?
+  if (type === 'checkout.session.completed') return SAFAR_LINKS.includes(o.payment_link);
+  if (type === 'invoice.paid') return (o.lines?.data || []).some(l => SAFAR_PRICES.includes(l.price?.id || l.pricing?.price_details?.price || l.plan?.id));
+  if (type === 'customer.subscription.deleted') return (o.items?.data || []).some(i => SAFAR_PRICES.includes(i.price?.id));
+  return false; }
 const roleOf = (o, uid) => o.owner === uid ? 'owner' : (o.members.find(m => m.uid === uid && m.status === 'active')?.role === 'coowner' ? 'coowner' : 'member');
 const orgOut = (o, uid) => { const admin = roleOf(o, uid) !== 'member';
   return { id: o.id, name: o.name, address: o.address, country: o.country, taxId: o.taxId, costCentre: o.costCentre, approver: o.approver, currency: o.currency, owner: o.owner === uid, role: roleOf(o, uid), ownerName: o.ownerName || '', ownerEmail: admin ? o.ownerEmail || '' : undefined, payerIsOwner: (o.payer || o.owner) === o.owner,
@@ -112,7 +127,7 @@ async function githubBackupJob(req) {
   } catch (e) { return false; }
 }
 // ---- abuse limits: per-address caps per hour, kept in memory (free, no storage writes). Each server copy counts on its own, so the caps are approximate. ----
-const CAPS = { org: 120, invite: 30, checkout: 20, transit: 60, 'hotel-rates': 60, 'live-new': 20, 'live-put': 600, mcp: 120, overpass: 300, auth: 30, 'trip-put': 600, export: 200 };
+const CAPS = { org: 120, invite: 30, checkout: 20, transit: 60, 'hotel-rates': 60, tours: 60, 'live-new': 20, 'live-put': 600, mcp: 120, overpass: 300, auth: 30, 'trip-put': 600, export: 200 };
 let HITS = new Map(), HITS_HOUR = 0; const TRM = { m: 0, n: 0 };
 function overCap(req, kind) {
   const hr = Math.floor(Date.now() / 36e5); if (hr !== HITS_HOUR || HITS.size > 20000) { HITS = new Map(); HITS_HOUR = hr; }
@@ -211,6 +226,22 @@ export default {
         out.sort((a, b) => a.times[0].t - b.times[0].t);
         const res = json(req, { enabled: true, routes: out.slice(0, 12), attribution: 'Powered by Transit' }); res.headers.set('Cache-Control', 'public, max-age=90'); later(caches.default.put(ck, res.clone())); return res;
       }
+      if (p === '/tours' && req.method === 'GET') {   // tours and tickets for a city or place (Viator partner API: Safar earns 8% on bookings); off until the VIATOR_KEY secret is set
+        if (overCap(req, 'tours')) return tooMany(req, 'tours');
+        if (!env.VIATOR_KEY) return json(req, { enabled: false });
+        const q = (url.searchParams.get('q') || '').slice(0, 120).trim(), cur = /^[A-Z]{3}$/.test(url.searchParams.get('cur') || '') ? url.searchParams.get('cur') : 'USD';
+        if (!q) return json(req, { error: 'q needed' }, 400);
+        const ck = new Request('https://cache.safar/tours?q=' + encodeURIComponent(q.toLowerCase()) + '&c=' + cur), hit = await caches.default.match(ck); if (hit) return json(req, await hit.json());
+        const r = await fetch('https://api.viator.com/partner/search/freetext', { method: 'POST', headers: { 'exp-api-key': env.VIATOR_KEY, Accept: 'application/json;version=2.0', 'Accept-Language': 'en-US', 'Content-Type': 'application/json' },
+          body: JSON.stringify({ searchTerm: q, currency: cur, searchTypes: [{ searchType: 'PRODUCTS', pagination: { start: 1, count: 8 } }] }) });
+        if (!r.ok) return json(req, { enabled: true, tours: [], error: 'viator ' + r.status });
+        const j = await r.json();
+        const tours = (j.products?.results || []).map(x => ({ code: x.productCode, title: String(x.title || '').slice(0, 140), url: x.productUrl || '', img: (x.images?.[0]?.variants || []).sort((a, b) => Math.abs(a.width - 240) - Math.abs(b.width - 240))[0]?.url || '',
+          rating: +x.reviews?.combinedAverageRating || 0, reviews: +x.reviews?.totalReviews || 0, price: +x.pricing?.summary?.fromPrice || 0, cur: x.pricing?.currency || cur,
+          dur: x.duration?.fixedDurationInMinutes ? (x.duration.fixedDurationInMinutes >= 60 ? Math.round(x.duration.fixedDurationInMinutes / 60 * 10) / 10 + ' h' : x.duration.fixedDurationInMinutes + ' min') : '' })).filter(t => t.url && t.title);
+        const out = { enabled: true, tours, attribution: 'Tours from Viator' };
+        later(caches.default.put(ck, new Response(JSON.stringify(out), { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=86400' } }))); return json(req, out);
+      }
       if (p === '/hotel-rates' && req.method === 'POST') {    // live hotel prices for a city (LiteAPI); off until the LITEAPI_KEY secret is set
         if (overCap(req, 'hotel-rates')) return tooMany(req, 'hotel-rates');
         if (!ORIGINS.includes(req.headers.get('Origin') || '')) return json(req, { error: 'not allowed' }, 403);
@@ -306,12 +337,19 @@ export default {
         return json(req, { enabled: true, url: j.url });
       }
       if (p === '/pay/webhook' && req.method === 'POST') {   // Stripe tells Safar a payment went through; only Stripe-signed messages count
-        if (!env.STRIPE_WHSEC) return json(req, { error: 'payments not set up' }, 503);
-        const body = await req.text(), sig = Object.fromEntries((req.headers.get('Stripe-Signature') || '').split(',').map(x => x.split('=')).filter(x => x.length === 2)), all = (req.headers.get('Stripe-Signature') || '').split(',').filter(x => x.startsWith('v1=')).map(x => x.slice(3));
-        const k = await crypto.subtle.importKey('raw', enc.encode(env.STRIPE_WHSEC), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-        const want = [...new Uint8Array(await crypto.subtle.sign('HMAC', k, enc.encode(sig.t + '.' + body)))].map(b => b.toString(16).padStart(2, '0')).join('');
-        if (!sig.t || Math.abs(Date.now() / 1000 - +sig.t) > 600 || !all.includes(want)) return json(req, { error: 'bad signature' }, 400);
-        const ev = JSON.parse(body), o = ev.data?.object || {}, DAY = 864e5;
+        const body = await req.text(); let ev;
+        if (env.STRIPE_WHSEC) {   // with Stripe's signing secret: check the signature
+          const sig = Object.fromEntries((req.headers.get('Stripe-Signature') || '').split(',').map(x => x.split('=')).filter(x => x.length === 2)), all = (req.headers.get('Stripe-Signature') || '').split(',').filter(x => x.startsWith('v1=')).map(x => x.slice(3));
+          const k = await crypto.subtle.importKey('raw', enc.encode(env.STRIPE_WHSEC), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+          const want = [...new Uint8Array(await crypto.subtle.sign('HMAC', k, enc.encode(sig.t + '.' + body)))].map(b => b.toString(16).padStart(2, '0')).join('');
+          if (!sig.t || Math.abs(Date.now() / 1000 - +sig.t) > 600 || !all.includes(want)) return json(req, { error: 'bad signature' }, 400);
+          ev = JSON.parse(body);
+        } else {   // without it: only Stripe's webhook servers, and only payments for Safar's own links and prices, count
+          if (!(await stripeIps(env)).includes(req.headers.get('CF-Connecting-IP') || '')) return json(req, { error: 'not from Stripe' }, 403);
+          try { ev = JSON.parse(body); } catch (x) { return json(req, { error: 'bad body' }, 400); }
+          if (!ev.livemode || !ours(ev.data?.object || {}, ev.type)) return json(req, { ok: true, skipped: 'not a Safar payment' });
+        }
+        const o = ev.data?.object || {}, DAY = 864e5;
         const load = async uid => JSON.parse(await env.SAFAR.get('pro:' + uid) || 'null') || {}, keep = (uid, r) => env.SAFAR.put('pro:' + uid, JSON.stringify(r));
         if (ev.type === 'checkout.session.completed' && o.client_reference_id) {
           let uid = ''; try { uid = new TextDecoder().decode(unb64u(o.client_reference_id)); } catch (x) {} if (!/^(google|microsoft|apple):[\w.@-]{1,120}$/.test(uid)) return json(req, { ok: true, skipped: 'unknown account' });

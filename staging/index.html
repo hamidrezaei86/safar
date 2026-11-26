@@ -18,7 +18,7 @@ document.documentElement.lang = LANG; if (LANG === 'fa' || LANG === 'ar') docume
 </script>
 <script>
 // Error reporting: if something breaks on a phone, a short note (the error message and where in Safar's code it happened — never trip contents or account details) goes to the Safar server so it can be fixed. At most 5 notes per visit.
-window.SAFAR_V = '2026.11.26-0051-staging';
+window.SAFAR_V = '2026.11.26-0123-staging';
 (() => { const seen = new Set(); let n = 0; const URL0 = 'https://safar-api.hamid-ebb.workers.dev/err';
   const send = (m, st) => { try { m = String(m || '').slice(0, 300); if (!m || n >= 5 || seen.has(m) || /ResizeObserver loop|^Script error\.?$/.test(m)) return; seen.add(m); n++;
     const body = JSON.stringify({ m, s: String(st || '').split('\n').slice(0, 5).join('\n').slice(0, 700), v: window.SAFAR_V, t: /[?&]test=1/.test(location.search) ? 1 : 0, ua: navigator.userAgent.slice(0, 160) });
@@ -535,7 +535,7 @@ body.ro .add,body.ro [data-del],body.ro .x,body.ro .xs,body.ro [data-drop],body.
 .psheet{break-before:page;page-break-before:always;padding:2mm}.psheet:first-child{break-before:auto;page-break-before:auto}
 .psheet header{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:10px}.psheet header small{font-size:11px;color:#555}.psheet h1{font-size:22px;margin:2px 0 0}.pw{font-size:12px;color:#333}
 .psk{width:100%;max-height:55mm;margin-bottom:8px;border:1px solid #ddd;border-radius:6px;background:#fafafa}
-.psheet table{width:100%;border-collapse:collapse}.psheet td{padding:4px 6px;border-bottom:1px solid #e5e5e5;vertical-align:top}.psheet td small{display:block;color:#666;font-size:10.5px}.psheet td i{color:#8a5300;font-style:normal;font-size:11px}
+.psheet table{width:100%;border-collapse:collapse}.psheet td{padding:3px 6px;border-bottom:1px solid #e5e5e5;vertical-align:top}.psheet td small{display:block;color:#666;font-size:10.5px}.psheet td i{color:#8a5300;font-style:normal;font-size:11px}
 .pt{width:46px;font-weight:700;white-space:nowrap}.pd{width:52px;text-align:right;color:#555;white-space:nowrap}.pn{display:inline-block;width:16px;height:16px;border-radius:50%;color:#fff;font-size:10px;font-weight:700;text-align:center;line-height:16px;margin-right:6px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .psheet footer{margin-top:8px;font-size:10px;color:#777}@page{margin:10mm}}
 .trcard{margin:10px 0;padding:10px 12px;border-radius:12px;background:var(--card,#fff);border:1px solid rgba(0,0,0,.08)}.trcard>b{display:block;margin-bottom:6px}.trrow{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid rgba(0,0,0,.06)}.trln{min-width:34px;text-align:center;font-weight:700;font-size:12px;padding:3px 6px;border-radius:6px}.trto{flex:1;font-size:14px;line-height:1.2}.trto small{display:block;color:var(--soft);font-size:12px}.trt{font-weight:700;font-size:13px;white-space:nowrap}.trt i{color:#0f9d7a;font-style:normal;margin-left:2px}.trby{display:flex;align-items:center;gap:10px;margin-top:8px;color:var(--soft);font-size:11px}.trby img{display:block;height:28px;width:auto}
@@ -546,6 +546,7 @@ body.ro .add,body.ro [data-del],body.ro .x,body.ro .xs,body.ro [data-drop],body.
 .tm{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:10px 12px;margin-bottom:8px}.tm .pn{flex:1 1 55%;min-width:0}.pf input[type=date]{width:100%;min-width:0;box-sizing:border-box}.tm b{display:block;font-size:14px}.tm small{color:var(--soft);font-size:12px;overflow-wrap:anywhere}.badge{font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px;white-space:nowrap}.badge.ok{color:#0f7a5f;background:#e5f4ee}.badge.wait{color:#8a5a00;background:#fdf1d8}.badge.no{color:#9b2c2c;background:#fbe9e9}.xrow{display:grid;grid-template-columns:92px 1fr 84px 26px;gap:6px;margin-bottom:6px;align-items:center}.xrow .input{padding:8px 10px;font-size:13px;min-width:0}.xrow select.input{padding:8px 4px}.xdel{border:0;background:none;color:var(--soft);font-size:18px;cursor:pointer}.rtot{display:flex;justify-content:space-between;font-weight:700;margin:6px 0 12px}.rep{background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:10px 12px;margin-bottom:8px}.rep .rh{display:flex;justify-content:space-between;gap:8px}.rep .ra{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .wsbtn{border:1px solid rgba(24,41,92,.18);background:#fff;color:#18295c;font:inherit;font-size:13px;font-weight:600;border-radius:999px;padding:6px 12px;margin-right:8px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}.wsbtn.biz{background:#0b7d70;color:#fff;border-color:transparent}.wsbtn[hidden]{display:none}.wsbtn.floatws{position:fixed;left:64px;top:calc(16px + env(safe-area-inset-top));z-index:30;margin:0;box-shadow:0 4px 14px rgba(24,41,92,.14)}
 .xcard{border:1px solid var(--line);border-radius:12px;padding:8px;margin-bottom:8px}.xcard .xrow{margin-bottom:6px}.xrow2{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center}.rcbtn{cursor:pointer;white-space:nowrap}.rcbtn.on{background:#dcf3ec;color:#0b6b5f}.xcardn{display:block;color:var(--soft);margin-top:4px;font-size:12px}.tm .pn small+small{display:block}
+.affnote{font-size:11.5px;color:var(--soft);margin:6px 0 0}.tours{margin-top:14px}.tours .ra{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.tourbox{margin:14px 0 6px;padding:12px;border:1px solid var(--line);border-radius:16px;background:var(--card)}.tourbox .ra{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.tlist{display:grid;gap:8px;margin-top:8px}.tour{display:flex;gap:10px;align-items:center;text-decoration:none;color:inherit}.tour .ti{width:56px;height:56px;border-radius:12px;background:#eee center/cover;flex:none}.tour .tt b{display:block;font-size:13.5px;line-height:1.3}.tour .tt small{color:var(--soft);font-size:12px}
 </style>
 </head>
 <body>
@@ -603,6 +604,7 @@ body.ro .add,body.ro [data-del],body.ro .x,body.ro .xs,body.ro [data-drop],body.
       <div id="exAsk"></div>
       <div class="chips" id="cats"></div>
       <div id="exList"></div>
+      <div id="exTours"></div>
     </section>
     <!-- STAY -->
     <section class="view" id="v-stay">
@@ -1248,6 +1250,35 @@ function renderWhere() {
 }
 function hubChips(c, mode, which, legId, sel) { const list = S.hubs?.[c.id + ':' + mode]; if (!list) return '<span class="hub">finding…</span>'; if (!list.length) return `<span class="hub">${esc(c.name)}</span>`;
   return `<span class="hubwrap">${list.map(h => `<button class="hub ${sel && sel.name === h.name ? 'on' : ''}" data-hub="${legId}" data-w="${which}" data-n="${esc(h.name)}" title="${esc(h.addr)}">${esc(h.name.replace(/^(Lisboa|Porto|Roma|Madrid|Milano|Paris)\s*[-–]\s*/, ''))}</button>`).join('')}</span>`; }
+// ---- partner programs: Safar earns a commission when a traveller books through these links ----
+// IDs are public partner codes (not secrets), added here as each program approves Safar. Empty = plain link, no commission.
+const AFF = {
+  booking:  { awinmid: '', awinaffid: '' },        // Booking.com via Awin (North America): ~4% on stays, US$2 on flights
+  expedia:  { camref: '' },                         // Expedia, Hotels.com, Vrbo via Partnerize: up to 4% hotels, 1.5% cars
+  dcars:    { aid: '' },                            // Discover Cars: 70% of its rental profit, 365-day cookie
+  viator:   { pid: '', mcid: '42383' },             // Viator: 8% on tours and tickets, 30 days
+  gyg:      { pid: '' },                            // GetYourGuide: ~8% on tours and tickets
+  tp:       { marker: '', kiwi: '', trip: '', klook: '', tiqets: '' },   // Travelpayouts: one account for Kiwi.com (3%), Trip.com, Klook, Tiqets (program ids per brand)
+  uber:     { client_id: '' },                      // Uber affiliate: a bounty for each new rider's first trip (apply after launch)
+};
+function aff(brand, url) { try {
+  if (brand === 'booking' && AFF.booking.awinaffid) return `https://www.awin1.com/cread.php?awinmid=${AFF.booking.awinmid}&awinaffid=${AFF.booking.awinaffid}&ued=${encodeURIComponent(url)}`;
+  if ((brand === 'expedia' || brand === 'hotels') && AFF.expedia.camref) return `https://prf.hn/click/camref:${AFF.expedia.camref}/destination:${encodeURIComponent(url)}`;
+  const u = new URL(url);
+  if (brand === 'dcars' && AFF.dcars.aid) u.searchParams.set('a_aid', AFF.dcars.aid);
+  if (brand === 'viator' && AFF.viator.pid) { u.searchParams.set('pid', AFF.viator.pid); u.searchParams.set('mcid', AFF.viator.mcid); u.searchParams.set('medium', 'link'); }
+  if (brand === 'gyg' && AFF.gyg.pid) { u.searchParams.set('partner_id', AFF.gyg.pid); u.searchParams.set('utm_medium', 'online_publisher'); }
+  if (['kiwi', 'trip', 'klook', 'tiqets'].includes(brand) && AFF.tp.marker && AFF.tp[brand]) return `https://tp.media/r?marker=${AFF.tp.marker}&p=${AFF.tp[brand]}&u=${encodeURIComponent(u.toString())}`;
+  return u.toString(); } catch (e) { return url; } }
+const affOn = () => !!(AFF.booking.awinaffid || AFF.expedia.camref || AFF.dcars.aid || AFF.viator.pid || AFF.gyg.pid || AFF.tp.marker);
+const AFF_NOTE = '<p class="affnote">Some links are partner links: Safar may earn a small commission at no cost to you.</p>';
+// tours and tickets for a place or a city (Viator, GetYourGuide, Klook, Tiqets)
+function tourLinks(q) { const t = encodeURIComponent(q); return [['Viator', aff('viator', `https://www.viator.com/searchResults/all?text=${t}`)], ['GetYourGuide', aff('gyg', `https://www.getyourguide.com/s/?q=${t}`)], ['Tiqets', aff('tiqets', `https://www.tiqets.com/en/search?q=${t}`)], ['Klook', aff('klook', `https://www.klook.com/search/result/?query=${t}`)]]; }
+// flights: Google Flights for the overview, plus partners that pay (Kiwi.com, Trip.com, Expedia)
+function flightLinks(from, to, d) { const code = x => x?.code || x?.name || '', ds = d || '';
+  return [['Kiwi.com', aff('kiwi', `https://www.kiwi.com/deep?from=${encodeURIComponent(code(from))}&to=${encodeURIComponent(code(to))}${ds ? '&departure=' + ds : ''}`)],
+    ['Trip.com', aff('trip', `https://www.trip.com/flights/showfarefirst?dcity=${encodeURIComponent(code(from))}&acity=${encodeURIComponent(code(to))}${ds ? '&ddate=' + ds : ''}`)],
+    ['Expedia', aff('expedia', `https://www.expedia.com/Flights-Search?leg1=${encodeURIComponent(`from:${code(from)},to:${code(to)}${ds ? ',departure:' + ds.slice(5, 7) + '/' + ds.slice(8) + '/' + ds.slice(0, 4) + 'TANYT' : ''}`)}&mode=search&trip=oneway&passengers=adults:1`)]]; }
 function ticketUrl(L) { const d = tripDates()[dayIndexOfCity(L.to.id)] || ''; const a = encodeURIComponent(L.from.name), b = encodeURIComponent(L.to.name);
   if (L.mode === 'flight') return `https://www.google.com/travel/flights?q=${encodeURIComponent(`Flights from ${L.from.name} to ${L.to.name} on ${d} ${flightPrefWords()}`.trim())}`;
   if (L.mode === 'car') return `https://www.google.com/maps/dir/?api=1&origin=${L.from.lat},${L.from.lng}&destination=${L.to.lat},${L.to.lng}&travelmode=driving`;
@@ -1315,8 +1346,9 @@ function carCfg() { const ds = tripDates(), sp = carSpots(), C = S.car || {}, tw
 function carLinks(c) { if (!c.from) return []; const lk = x => x.code || (x.name + (x.sub ? ',' + x.sub.split(',').pop().trim() : '')).replace(/\s+/g, '-'), hh = t => String(+String(t).split(':')[0]).padStart(2, '0') + 'h';
   const oneWay = c.to && c.to.k !== c.from.k, us = d => d ? d.slice(5, 7) + '/' + d.slice(8, 10) + '/' + d.slice(0, 4) : '', at = t => { const h = +String(t).split(':')[0]; return (h % 12 || 12) + '00' + (h < 12 ? 'AM' : 'PM'); };
   return [
+    ['Discover Cars', aff('dcars', `https://www.discovercars.com/search?location=${encodeURIComponent(c.from.code || c.from.name)}${oneWay ? '&dropoff=' + encodeURIComponent(c.to.code || c.to.name) : ''}&pickup_date=${c.d1}&pickup_time=${c.t1}&dropoff_date=${c.d2}&dropoff_time=${c.t2}`)],
     ['KAYAK', `https://www.kayak.com/cars/${encodeURIComponent(lk(c.from))}${oneWay ? '/' + encodeURIComponent(lk(c.to)) : ''}/${c.d1}-${hh(c.t1)}/${c.d2}-${hh(c.t2)}`],
-    ['Expedia', `https://www.expedia.com/carsearch?locn=${encodeURIComponent(c.from.code || c.from.name)}${oneWay ? '&loc2=' + encodeURIComponent(c.to.code || c.to.name) : ''}&date1=${us(c.d1)}&date2=${us(c.d2)}&time1=${at(c.t1)}&time2=${at(c.t2)}`],
+    ['Expedia', aff('expedia', `https://www.expedia.com/carsearch?locn=${encodeURIComponent(c.from.code || c.from.name)}${oneWay ? '&loc2=' + encodeURIComponent(c.to.code || c.to.name) : ''}&date1=${us(c.d1)}&date2=${us(c.d2)}&time1=${at(c.t1)}&time2=${at(c.t2)}`)],
     ['Turo', `https://turo.com/us/en/search?location=${encodeURIComponent(c.from.name)}&startDate=${us(c.d1)}&startTime=${c.t1}&endDate=${us(c.d2)}&endTime=${c.t2}`],
     ['Map', `https://www.google.com/maps/search/car+rental/@${c.from.lat},${c.from.lng},14z`]]; }
 function carWanted() { return modes().includes('drive') || Object.values(S.legs || {}).some(l => l?.mode === 'car') || S.car; }
@@ -1330,7 +1362,7 @@ function renderCar() {
   el.innerHTML = `<div class="carcard"><div class="abh"><span class="carico">${CAR_ICON}</span><div class="abm"><b>Rental car</b><small>Compare prices for your dates</small></div><button class="x" data-car="off" aria-label="Hide rental car">×</button></div>
     <div class="frm carfrm"><label>Pick up<select data-carf="from">${opt(c.from)}</select></label><label>Return<select data-carf="to">${opt(c.to)}</select></label>
       <label>On${dsel('d1', c.d1)}</label><label>At${tsel('t1', c.t1)}</label><label>Until${dsel('d2', c.d2)}</label><label>At${tsel('t2', c.t2)}</label></div>
-    <div class="carlinks">${carLinks(c).map(([n, u]) => `<a class="mini" target="_blank" rel="noopener" href="${esc(u)}">${n === 'Map' ? 'Rental desks on map' : n} ↗</a>`).join('')}</div>
+    <div class="carlinks">${carLinks(c).map(([n, u]) => `<a class="mini" target="_blank" rel="noopener sponsored" href="${esc(u)}">${n === 'Map' ? 'Rental desks on map' : n} ↗</a>`).join('')}</div>${affOn() ? AFF_NOTE : ''}
     ${carDraft.open ? `<div class="frm" style="margin-top:8px"><label>Company<input data-cardr="company" placeholder="e.g. Hertz" value="${esc(carDraft.company || c.company || '')}"></label><label>Booking ref (optional)<input data-cardr="conf" value="${esc(carDraft.conf || c.conf || '')}"></label></div>
       <div style="display:flex;gap:8px;margin-top:8px"><button class="mini teal" data-car="save">Save booking</button><button class="mini" data-car="cancel">Cancel</button>${c.booked ? '<button class="mini" data-car="remove">Remove</button>' : ''}</div>`
       : `<button class="linkbtn" data-car="book" style="margin-top:8px">Already booked? Add your rental</button>`}</div>`;
@@ -1437,7 +1469,7 @@ function renderExplore() {
   const present = new Set(SG().map(s => s.cat));
   $('#cats').innerHTML = [`<button class="pill sm ${exCat === 'all' ? 'on' : ''}" data-c="all">Top picks</button>`, `<button class="pill sm ${exCat === 'mine' ? 'on' : ''}" data-c="mine">Saved ${stopsC().length || ''}</button>`]
     .concat(CATS.filter(c => present.has(c.k)).map(c => `<button class="pill sm ${exCat === c.k ? 'on' : ''}" data-c="${c.k}">${c.n}</button>`)).join('');
-  const L = $('#exList');
+  const L = $('#exList'); renderTours();
   if (exCat === 'mine') { L.innerHTML = stopsC().length ? stopsC().map(placeRow).join('') : '<p style="color:var(--soft)">Nothing picked yet.</p>'; return; }
   if (exLoading) { L.innerHTML = '<div class="grid">' + '<div class="skel"></div>'.repeat(6) + '</div>'; return; }
   if (!SG().length) { L.innerHTML = '<p style="color:var(--soft)">No suggestions yet — search above.</p>'; return; }
@@ -1445,6 +1477,15 @@ function renderExplore() {
   L.innerHTML = '<div class="grid">' + list.map((s, i) => { const on = isPicked(s); const rank = SG().indexOf(s);
     return `<div class="card ${on ? 'on' : ''}" data-w="${s.wid}"><div class="img" style="${s.img ? `background-image:url('${esc(s.img)}')` : ''}">${s.img ? '' : s.emoji}</div>${rank < 5 ? '<span class="hot">Popular</span>' : ''}<button class="add" data-add="${s.wid}">${on ? '✓' : '+'}</button><div class="t"><b>${esc(s.name)}</b><small>${s.emoji} ${esc(s.desc || CATS.find(c => c.k === s.cat).n)}</small></div></div>`; }).join('') + '</div>';
 }
+// Explore: tours and tickets for the city (live from Viator's API when Safar's server has the key; links otherwise)
+const TOURS = { city: '', items: null, busy: false };
+async function renderTours() { const el = $('#exTours'), c = cur(); if (!el) return; if (!c) { el.innerHTML = ''; return; }
+  const links = tourLinks(c.name).map(([n, u]) => `<a class="mini" target="_blank" rel="noopener sponsored" href="${u}">${n} ↗</a>`).join('');
+  const it = TOURS.city === c.id ? TOURS.items : null;
+  el.innerHTML = `<div class="tourbox"><div class="tbh"><b>🎟️ Tours and tickets in ${esc(c.name)}</b></div>${it?.length ? `<div class="tlist">${it.slice(0, 4).map(t => `<a class="tour" target="_blank" rel="noopener sponsored" href="${esc(t.url)}">${t.img ? `<span class="ti" style="background-image:url('${esc(t.img)}')"></span>` : ''}<span class="tt"><b>${esc(t.title)}</b><small>${t.rating ? '★ ' + t.rating.toFixed(1) + (t.reviews ? ' (' + t.reviews + ')' : '') + ' · ' : ''}${t.price ? 'from ' + money(t.price, t.cur) : ''}${t.dur ? ' · ' + esc(t.dur) : ''}</small></span></a>`).join('')}</div>` : ''}<div class="ra">${links}</div>${affOn() || it?.length ? AFF_NOTE : ''}</div>`;
+  if (TOURS.city === c.id || TOURS.busy) return; TOURS.busy = true; TOURS.city = c.id; TOURS.items = null;
+  try { const r = await apiFetch('/tours?q=' + encodeURIComponent(c.name) + '&cur=' + myCurrency(), {}, 8000); const j = r.ok ? await r.json() : {}; TOURS.items = j.enabled ? (j.tours || []) : []; } catch (e) { TOURS.items = []; }
+  TOURS.busy = false; if (cur()?.id === c.id && TOURS.items.length) renderTours(); }
 function placeRow(p) {
   return `<div class="row" data-pid="${p.id}"><div class="em" style="${p.img ? `background-image:url('${esc(p.img)}')` : ''}">${p.img ? '' : (p.emoji || '📍')}</div>
   <div class="mid"><b>${esc(p.name)}</b><small>${p.fixed ? '🎟️ ' + p.fixed + ' · ' : ''}${p.open ? p.open + '–' + (p.close || '') : ''}</small></div>
@@ -1662,12 +1703,12 @@ $('#prefIn').addEventListener('click', e => {
 $('#prefIn').addEventListener('input', e => { const i = e.target.closest('[data-pi]'); if (!i) return; const [g, k] = i.dataset.pi.split('.'); PREF[g][k] = /min|max/.test(k) ? i.value.replace(/[^\d]/g, '') : i.value; if (i.value !== PREF[g][k]) i.value = PREF[g][k]; savePref(); });
 renderPrefSum();
 function bookUrl(h) { const cid = h.city || cur()?.id, i0 = dayIndexOfCity(cid), c = cities().find(x => x.id === cid) || cur(), ds = tripDates(); const ci = ds[i0] || S.settings.startDate;
-  const co = isoDay(new Date(new Date(ci + 'T00:00:00Z').getTime() + nightsOf(c) * 864e5)); return `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(h.name + ', ' + (c?.name || ''))}&checkin=${ci}&checkout=${co}&group_adults=${Math.max(1, +S.settings.guests || 2)}&no_rooms=1${bookingFilters()}`; }
+  const co = isoDay(new Date(new Date(ci + 'T00:00:00Z').getTime() + nightsOf(c) * 864e5)); return aff('booking', `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(h.name + ', ' + (c?.name || ''))}&checkin=${ci}&checkout=${co}&group_adults=${Math.max(1, +S.settings.guests || 2)}&no_rooms=1${bookingFilters()}`); }
 // ---- hotel prices: dated links to compare sites (always), live prices from Safar's server (when its hotel-rates key is set) ----
 function stayOf(h) { const cid = h.city || cur()?.id, c = cities().find(x => x.id === cid) || cur(), ds = tripDates(), ci = ds[dayIndexOfCity(cid)] || S.settings.startDate, n = nightsOf(c) || 1;
   return { c, ci, co: ci ? isoDay(new Date(new Date(ci + 'T00:00:00Z').getTime() + n * 864e5)) : '', n, ad: Math.max(1, +S.settings.guests || 2) }; }
 function compareLinks(h) { const { c, ci, co, ad } = stayOf(h), q = encodeURIComponent(h.name + ', ' + (c?.name || '')), d = ci ? new Date(ci + 'T12:00:00Z').toLocaleDateString('en', { month: 'short', day: 'numeric', timeZone: 'UTC' }) + ' to ' + new Date(co + 'T12:00:00Z').toLocaleDateString('en', { month: 'short', day: 'numeric', timeZone: 'UTC' }) : '';
-  return [['Booking.com', bookUrl(h)], ['Expedia', `https://www.expedia.com/Hotel-Search?destination=${q}&startDate=${ci}&endDate=${co}&adults=${ad}&rooms=1`], ['Hotels.com', `https://www.hotels.com/Hotel-Search?destination=${q}&startDate=${ci}&endDate=${co}&adults=${ad}&rooms=1`],
+  return [['Booking.com', bookUrl(h)], ['Expedia', aff('expedia', `https://www.expedia.com/Hotel-Search?destination=${q}&startDate=${ci}&endDate=${co}&adults=${ad}&rooms=1`)], ['Hotels.com', aff('hotels', `https://www.hotels.com/Hotel-Search?destination=${q}&startDate=${ci}&endDate=${co}&adults=${ad}&rooms=1`)], ['Trip.com', aff('trip', `https://www.trip.com/hotels/list?keyword=${q}&checkin=${ci}&checkout=${co}&adult=${ad}`)],
     ['Agoda', `https://www.agoda.com/search?textToSearch=${q}&checkIn=${ci}&checkOut=${co}&adults=${ad}&rooms=1`], ['Google Hotels', `https://www.google.com/travel/search?q=${encodeURIComponent(h.name + ' ' + (c?.name || '') + (d ? ' ' + d : ''))}`]]; }
 const CURR = { CA: 'CAD', US: 'USD', GB: 'GBP', AU: 'AUD', NZ: 'NZD', CH: 'CHF', JP: 'JPY', IN: 'INR', AE: 'AED', SE: 'SEK', NO: 'NOK', DK: 'DKK', MX: 'MXN', TR: 'TRY' }, EURO = /^(AT|BE|CY|DE|EE|ES|FI|FR|GR|HR|IE|IT|LT|LU|LV|MT|NL|PT|SI|SK)$/;
 function myCurrency() { if (S.settings.currency) return S.settings.currency; const r = (navigator.language || 'en-CA').split('-')[1]?.toUpperCase() || 'CA'; return CURR[r] || (EURO.test(r) ? 'EUR' : 'USD'); }
@@ -1702,7 +1743,7 @@ function hotelCard(x, i, sel) {
     ${hotelFits(x) ? '<span class="hfit">✓ Fits your preferences</span>' : ''}
     ${rateLine(x)}
     <div class="hbtns"><a class="mini" target="_blank" rel="noopener" href="${bookUrl(x)}">Book ↗</a><button class="mini" data-cmp="${esc(x.name)}" aria-expanded="${cmpOpen === x.name}">Compare prices</button>${x.gurl ? `<a class="mini" target="_blank" rel="noopener" href="${esc(x.gurl)}">Reviews</a>` : ''}${x.web ? `<a class="mini" target="_blank" rel="noopener" href="${esc(x.web)}">Website</a>` : ''}<button class="mini teal" data-base="${i}">${sel ? 'Chosen ✓' : 'Stay here'}</button></div>
-    ${cmpOpen === x.name ? `<div class="hcmp">${compareLinks(x).map(([n, u]) => `<a target="_blank" rel="noopener" href="${esc(u)}">${n} ↗</a>`).join('')}<small>Opens each site with your dates and ${stayOf(x).ad} ${stayOf(x).ad === 1 ? 'guest' : 'guests'}</small></div>` : ''}</div></div>`;
+    ${cmpOpen === x.name ? `<div class="hcmp">${compareLinks(x).map(([n, u]) => `<a target="_blank" rel="noopener sponsored" href="${esc(u)}">${n} ↗</a>`).join('')}${affOn() ? AFF_NOTE : ''}<small>Opens each site with your dates and ${stayOf(x).ad} ${stayOf(x).ad === 1 ? 'guest' : 'guests'}</small></div>` : ''}</div></div>`;
 }
 function renderStay() {
   cityTabs('#stCities', () => refresh(true));
@@ -2063,7 +2104,7 @@ function travelBlock(T, col) {
   let h = `<div class="ti trv"><span class="tm">${Core.fmt(T.leave)}</span><span class="nd" style="background:var(--lav)">🧳</span><div class="bx"><b>Check out · ${esc(T.A?.name || T.from.name)}</b><small>${T.L.mode === 'car' ? 'Hit the road' : `🚕 ${T.tA} min to ${esc(T.ha?.name || 'the ' + (T.L.mode === 'flight' ? 'airport' : 'station'))}`}</small></div><span></span></div>` + ln;
   h += `<div class="ti trv"><span class="tm">${Core.fmt(T.dep)}</span><span class="nd" style="background:#9b8cff">${M.e}</span><div class="bx"><b>${T.L.no ? esc(T.L.no) + ' · ' : M.n + ' to '}${T.L.no ? esc(T.to.name) : esc(T.to.name)} · ${Core.fmt(T.dep)}–${Core.fmt(T.arr)}${S.legs[T.to.id]?.booked ? ' <span class="okc">· booked</span>' : ''}</b>
     ${T.ha ? `<small>📍 ${esc(T.ha.name)}${T.ha.addr ? ' · ' + esc(T.ha.addr) : ''}</small><br><small>🏁 ${esc(T.hb?.name || T.to.name)}${T.hb?.addr ? ' · ' + esc(T.hb.addr) : ''}</small>` : `<small>${fmtDur(T.L.dur)} ${T.L.mode === 'car' ? 'drive' : 'ride'}</small>`}
-    <div class="opts"><a class="opt" target="_blank" rel="noopener" href="${ticketUrl(T.L)}">${T.L.mode === 'car' ? '🧭 Route' : '🎟️ Find tickets'} ↗</a>${T.ha ? `<a class="opt" target="_blank" rel="noopener" href="${mapL(T.ha)}">🧭 To ${T.L.mode === 'flight' ? 'airport' : 'station'} ↗</a>` : ''}</div></div><span></span></div>` + ln;
+    <div class="opts"><a class="opt" target="_blank" rel="noopener" href="${ticketUrl(T.L)}">${T.L.mode === 'car' ? '🧭 Route' : '🎟️ Find tickets'} ↗</a>${T.L.mode === 'flight' ? flightLinks(T.L.from, T.L.to, tripDates()[dayIndexOfCity(T.L.to.id)]).map(([n, u]) => `<a class="opt" target="_blank" rel="noopener sponsored" href="${u}">✈️ ${n} ↗</a>`).join('') : ''}${T.ha ? `<a class="opt" target="_blank" rel="noopener" href="${mapL(T.ha)}">🧭 To ${T.L.mode === 'flight' ? 'airport' : 'station'} ↗</a>` : ''}</div></div><span></span></div>` + ln;
   if (T.L.mode !== 'car') h += `<div class="leg"><span></span><span class="ln" style="background:#b9a7ff"></span><span>🚕 ${T.tB} min to your hotel</span></div>`;
   return h;
 }
@@ -2383,7 +2424,7 @@ function liveSync(x) {
 }
 function stopsLeftToday() { return dayOrder(S.track.day).filter(o => !S.track.visited[o.id]).length; }
 // ---- live public transport near you (Transit API, through Safar's server; off until the server has a Transit key) ----
-const TR = { at: 0, key: '', busy: false, data: null, off: false };
+const TR = { at: 0, key: '', busy: false, data: null, off: !location.pathname.includes('/staging/') && Date.now() < Date.UTC(2026, 11, 10, 17) };   // live departures go public on 10 Dec 2026, 10 business days after Safar's notice to Transit (their API terms)
 function transitFetch(here) {
   if (TR.off || TR.busy || !here) return; const key = here.lat.toFixed(3) + ',' + here.lng.toFixed(3);
   if (key === TR.key && Date.now() - TR.at < 120000) return;
@@ -3418,6 +3459,7 @@ function openPlace(id) { const p = pById(id); if (!p) return; const D = tripDate
    ${p.oh ? `<small class="full" style="color:var(--soft);font-size:12.5px;margin-top:-4px">Opening hours from OpenStreetMap: ${esc(p.oh)}</small>` : ''}
    <label>Ticket booked for<input type="time" data-pf="fixed" value="${p.fixed}"></label>
    <label>Only on<select data-pf="pin"><option value="">Any day</option>${Array.from({ length: D }, (_, i) => `<option value="${i}" ${String(p.pin) === String(i) ? 'selected' : ''}>Day ${i + 1} · ${dayShort(i)}</option>`).join('')}</select></label></div>
+   <div class="tours"><span class="pl">Tickets and tours</span><div class="ra">${tourLinks(p.name + ' ' + (cities().find(c => c.id === p.city)?.name || '')).map(([n, u]) => `<a class="mini" target="_blank" rel="noopener sponsored" href="${u}">${n} ↗</a>`).join('')}</div>${affOn() ? AFF_NOTE : ''}</div>
    <div style="margin-top:16px"><button class="cta" data-close>Done</button></div>`;
   $('#placeIn').dataset.id = id; $('#placeSheet').classList.add('on'); }
 $('#placeIn').addEventListener('change', e => { const f = e.target.dataset.pf; if (!f) return; const p = pById($('#placeIn').dataset.id); p[f] = e.target.type === 'number' ? +e.target.value : e.target.value; if (f === 'open' || f === 'close') delete p.ohAuto; save(); });
@@ -3549,25 +3591,23 @@ function reportHtml(r, co, rc = {}) { const e = esc, cur = r.currency, by = {}, 
   const kv = (k, v) => v ? `<div><dt>${k}</dt><dd>${e(v)}</dd></div>` : '';
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Cost report · ${e(r.title)}</title><style>
 @page{size:A4;margin:14mm 14mm 16mm}*{box-sizing:border-box}body{margin:0;font:10pt/1.45 "DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;color:#1c2333;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.band{background:#0c1633;color:#fff;padding:16px 20px;border-radius:6px;display:flex;justify-content:space-between;align-items:flex-end}.wm{font:700 22pt/1 Fraunces,Georgia,serif;letter-spacing:-.5px}.wm i{color:#f2b544;font-style:normal}.band small{display:block;opacity:.75;font-size:8.5pt;margin-top:4px}.band .co{text-align:right;font-size:9pt;opacity:.92}.band .co b{font-size:11pt;display:block}
-h1{font:600 17pt/1.2 Fraunces,Georgia,serif;margin:18px 0 2px}.sub{color:#5b6475;margin:0 0 12px}dl{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 18px;margin:0 0 16px;padding:12px 14px;background:#f4f6f9;border-radius:6px}dt{font-size:7.5pt;color:#5b6475;text-transform:none}dd{margin:0;font-weight:600}
-h2{font-size:10.5pt;margin:14px 0 5px;color:#0c1633;border-bottom:2px solid #0b7d70;padding-bottom:3px}table{width:100%;border-collapse:collapse}th{text-align:left;font-size:8pt;color:#5b6475;font-weight:600;border-bottom:1px solid #cfd5df;padding:5px 6px}td{padding:5px 6px;border-bottom:1px solid #e6e9ef;vertical-align:top}td.n,th.n{text-align:right;white-space:nowrap;}td.d{white-space:nowrap;font-variant-numeric:tabular-nums}tr{page-break-inside:avoid}
+.band{background:#0c1633;color:#fff;padding:12px 18px;border-radius:6px;display:flex;justify-content:space-between;align-items:flex-end}.wm{font:700 22pt/1 Fraunces,Georgia,serif;letter-spacing:-.5px}.wm i{color:#f2b544;font-style:normal}.band small{display:block;opacity:.75;font-size:8.5pt;margin-top:4px}.band .co{text-align:right;font-size:9pt;opacity:.92}.band .co b{font-size:11pt;display:block}
+h1{font:600 16pt/1.2 Fraunces,Georgia,serif;margin:12px 0 2px}.sub{color:#5b6475;margin:0 0 12px}dl{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 18px;margin:0 0 10px;padding:9px 12px;background:#f4f6f9;border-radius:6px}dt{font-size:7.5pt;color:#5b6475;text-transform:none}dd{margin:0;font-weight:600}
+h2{font-size:10.5pt;margin:14px 0 5px;color:#0c1633;border-bottom:2px solid #0b7d70;padding-bottom:3px}table{width:100%;border-collapse:collapse}th{text-align:left;font-size:8pt;color:#5b6475;font-weight:600;border-bottom:1px solid #cfd5df;padding:4px 6px}td{padding:5px 6px;border-bottom:1px solid #e6e9ef;vertical-align:top}td.n,th.n{text-align:right;white-space:nowrap;}td.d{white-space:nowrap;font-variant-numeric:tabular-nums}tr{page-break-inside:avoid}
 .tot td{border:0;font-weight:700;font-size:10.5pt}.tot td:first-child{text-align:right}.claim{margin-top:8px;padding:10px 14px;border:1.5px solid #0b7d70;border-radius:6px;display:flex;justify-content:space-between;font-weight:700}
-.appr{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:10px}.sig{border-top:1px solid #1c2333;padding-top:4px;margin-top:26px;font-size:8.5pt;color:#5b6475}.status{display:inline-block;padding:2px 9px;border-radius:99px;font-weight:600;font-size:8.5pt;background:${r.status === 'approved' || r.status === 'paid' ? '#dcf3ec;color:#0b6b5f' : r.status === 'returned' ? '#fbe3e3;color:#9b2c2c' : '#fff1d6;color:#8a5a00'}}
-.ap{page-break-inside:avoid;break-inside:avoid}.rc{page-break-before:always}.rc figure{margin:0 0 14px;page-break-inside:avoid}.rc img{max-width:100%;max-height:230mm;border:1px solid #e6e9ef;border-radius:4px}.rc figcaption{font-size:8.5pt;color:#5b6475;margin-bottom:4px}.ft{margin-top:22px;font-size:7.5pt;color:#8a93a3;display:flex;justify-content:space-between}.rn{display:inline-block;min-width:18px;text-align:center;background:#0c1633;color:#fff;border-radius:3px;font-size:7.5pt;font-weight:700}
+.appr{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:10px}.sig{border-top:1px solid #1c2333;padding-top:4px;margin-top:22px;font-size:8.5pt;color:#5b6475}.status{display:inline-block;padding:2px 9px;border-radius:99px;font-weight:600;font-size:8.5pt;background:${r.status === 'approved' || r.status === 'paid' ? '#dcf3ec;color:#0b6b5f' : r.status === 'returned' ? '#fbe3e3;color:#9b2c2c' : '#fff1d6;color:#8a5a00'}}
+.sum{display:flex;flex-wrap:wrap;gap:6px}.sum div{border:1px solid #e1e5ec;border-radius:6px;padding:5px 10px;min-width:92px}.sum span{display:block;font-size:7.5pt;color:#5b6475}.sum .st{background:#0c1633;color:#fff;border-color:#0c1633}.sum .st span{color:#c9d3ea}.ap{page-break-inside:avoid;break-inside:avoid}.rc{page-break-before:always}.rc figure{margin:0 0 14px;page-break-inside:avoid}.rc img{max-width:100%;max-height:112mm;border:1px solid #e6e9ef;border-radius:4px}.rc figcaption{font-size:8.5pt;color:#5b6475;margin-bottom:4px}.ft{margin-top:14px;font-size:7.5pt;color:#8a93a3;display:flex;justify-content:space-between}.rn{display:inline-block;min-width:18px;text-align:center;background:#0c1633;color:#fff;border-radius:3px;font-size:7.5pt;font-weight:700}
 </style></head><body>
-<div class="band"><div><div class="wm">safar<i>.</i></div><small>Travel cost report</small></div><div class="co"><b>${e(co.name || r.company || 'Business trip')}</b>${e(co.address || '')}${co.taxId ? '<br>Tax / GST ' + e(co.taxId) : ''}</div></div>
+<div class="band"><div><div class="wm">safar<i>.</i></div><small>Travel cost report</small></div></div>
 <h1>${e(r.title)}</h1><p class="sub">${e(r.name || '')}${r.email ? ' · ' + e(r.email) : ''}</p>
 <dl>${kv('Trip dates', [r.from, r.to].filter(Boolean).join(' to '))}${kv('Cities', r.cities)}${kv('Business purpose', r.purpose)}${kv('Cost centre', co.costCentre)}${kv('Employee ID', r.employeeId)}${kv('Report number', r.id)}${kv('Submitted', r.submitted ? new Date(r.submitted).toISOString().slice(0, 10) : '')}${kv('Report currency', cur)}</dl>
-<h2>Summary by category</h2><table><thead><tr><th>Category</th><th class="n">Amount</th></tr></thead><tbody>${Object.entries(by).map(([k, v]) => { const [c, u] = k.split('|'); return `<tr><td>${e(c)}</td><td class="n">${u} ${num(v)}</td></tr>`; }).join('')}</tbody>
-<tbody class="tot">${Object.entries(tots).map(([u, v]) => `<tr><td>Total</td><td class="n">${u} ${num(v)}</td></tr>`).join('')}</tbody></table>
+<h2>Summary by category</h2><div class="sum">${Object.entries(by).map(([k, v]) => { const [c, u] = k.split('|'); return `<div><span>${e(c)}</span><b>${u} ${num(v)}</b></div>`; }).join('')}${Object.entries(tots).map(([u, v]) => `<div class="st"><span>Total</span><b>${u} ${num(v)}</b></div>`).join('')}</div>
 <h2>Expenses</h2><table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Paid with</th><th class="n">Tax</th><th class="n">Amount</th><th class="n">Receipt</th></tr></thead><tbody>
 ${r.items.map((i, k) => `<tr><td class="d">${e(i.date || '')}</td><td>${e(i.cat)}</td><td>${e(i.desc)}</td><td>${e(i.card || '')}</td><td class="n">${+i.tax ? num(i.tax) : ''}</td><td class="n">${e(i.cur)} ${num(i.amount)}</td><td class="n">${rx[k] ? `<span class="rn">${rx[k]}</span>` : '<span style="color:#9aa">none</span>'}</td></tr>`).join('')}</tbody>
 <tbody class="tot">${Object.entries(tots).map(([u, v]) => `<tr><td colspan="5">Total${taxT[u] ? ` (includes tax ${u} ${num(taxT[u])})` : ''}</td><td class="n">${u} ${num(v)}</td><td></td></tr>`).join('')}</tbody></table>
 ${coPaid.length ? `<div class="claim"><span>To reimburse to the traveller (excludes ${coPaid.length} item${coPaid.length > 1 ? 's' : ''} paid by the company)</span><span>${Object.entries(claim).map(([u, v]) => u + ' ' + num(v)).join(' + ') || cur + ' 0.00'}</span></div>` : ''}
 <section class="ap"><h2>Approval</h2><p>Status: <span class="status">${st}</span>${r.reviewer ? ` · by ${e(r.reviewer)}` : ''}${r.reviewed ? ' on ' + new Date(r.reviewed).toISOString().slice(0, 10) : ''}</p>${r.note ? `<p>Note: ${e(r.note)}</p>` : ''}
-<div class="appr"><div><div class="sig">Traveller: ${e(r.name || '')}${r.submitted ? ' · signed electronically ' + new Date(r.submitted).toISOString().slice(0, 10) : ''}</div></div><div><div class="sig">Approver${co.approver ? ': ' + e(co.approver) : ''}</div></div></div></section>
-<div class="ft"><span>Made with Safar · safar.amovasolutions.com</span><span>${r.id ? 'Report ' + e(r.id) + ' · ' : ''}printed ${new Date().toISOString().slice(0, 10)}</span></div>
+<div class="appr"><div><div class="sig">Traveller: ${e(r.name || '')}${r.submitted ? ' · signed electronically ' + new Date(r.submitted).toISOString().slice(0, 10) : ''}</div></div><div><div class="sig">Approver${co.approver ? ': ' + e(co.approver) : ''}</div></div></div><div class="ft"><span>Made with Safar · safar.amovasolutions.com</span><span>${r.id ? 'Report ' + e(r.id) + ' · ' : ''}printed ${new Date().toISOString().slice(0, 10)}</span></div></section>
 ${n ? `<div class="rc"><h2>Receipts</h2>${r.items.map((i, k) => { if (!rx[k]) return ''; const d = i.rdata || rc[i.receipt]; return `<figure><figcaption><span class="rn">${rx[k]}</span> ${e(i.date || '')} · ${e(i.desc || i.cat)} · ${e(i.cur)} ${num(i.amount)}</figcaption>${!d ? '<p>Receipt kept in Safar (could not be loaded).</p>' : /^data:application\/pdf/.test(d) ? '<p>PDF receipt: attached separately in Safar.</p>' : `<img src="${d}" alt="Receipt ${rx[k]}">`}</figure>`; }).join('')}</div>` : ''}
 </bo` + `dy></ht` + `ml>`; }
 async function printReport(r) { const co = ORG.org && r.uid !== undefined ? ORG.org : { name: BIZ.company, address: [BIZ.address, BIZ.country].filter(Boolean).join(', '), taxId: BIZ.taxId, costCentre: BIZ.costCentre, approver: BIZ.approver }, rc = {};
@@ -3583,10 +3623,11 @@ function shrinkImage(file) { return new Promise((ok, no) => { if (file.type === 
 const stBadge = s => `<span class="badge ${s === 'active' || s === 'approved' || s === 'paid' ? 'ok' : s === 'returned' ? 'no' : 'wait'}">${{ active: 'Joined', invited: 'Invited', submitted: 'Submitted', approved: 'Approved', paid: 'Paid', returned: 'Returned', saved: 'Saved' }[s] || esc(s)}</span>`;
 const KINDS = [['hotel', '🏨 Stay'], ['flight', '✈️ Flight'], ['train', '🚆 Train'], ['car', '🚗 Car'], ['other', '🧾 Other']];
 function findLinks(b) { const d0 = (b.start || '').slice(0, 10), d1 = (b.end || '').slice(0, 10), out = [];
-  if (b.kind === 'hotel' && b.city) out.push(['Find a stay on Booking.com', `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(b.city)}${d0 ? '&checkin=' + d0 : ''}${d1 ? '&checkout=' + d1 : ''}&group_adults=1&no_rooms=1${bookingFilters()}`]);
+  if (b.kind === 'hotel' && b.city) out.push(['Find a stay on Booking.com', aff('booking', `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(b.city)}${d0 ? '&checkin=' + d0 : ''}${d1 ? '&checkout=' + d1 : ''}&group_adults=1&no_rooms=1${bookingFilters()}`)], ['Expedia', aff('expedia', `https://www.expedia.com/Hotel-Search?destination=${encodeURIComponent(b.city)}${d0 ? '&startDate=' + d0 : ''}${d1 ? '&endDate=' + d1 : ''}&adults=1&rooms=1`)]);
   if ((b.kind === 'flight' || b.kind === 'train') && b.from && b.to) out.push([b.kind === 'flight' ? 'Compare flights' : 'Find trains', b.kind === 'flight' ? `https://www.google.com/travel/flights?q=${encodeURIComponent(`Flights from ${b.from} to ${b.to}${d0 ? ' on ' + d0 : ''} ${flightPrefWords()}`)}` : `https://www.thetrainline.com/search/${encodeURIComponent(b.from)}/${encodeURIComponent(b.to)}${d0 ? '/' + d0 : ''}`]);
-  if (b.kind === 'car' && b.city) out.push(['Compare rental cars', `https://www.kayak.com/cars/${encodeURIComponent(b.city)}${d0 ? '/' + d0 : ''}${d1 ? '/' + d1 : ''}`]);
-  return out.map(([n, u]) => `<a class="mini" href="${esc(u)}" target="_blank" rel="noopener">${n}</a>`).join(''); }
+  if (b.kind === 'flight' && b.from && b.to) flightLinks({ name: b.from }, { name: b.to }, d0).forEach(x => out.push(x));
+  if (b.kind === 'car' && b.city) out.push(['Compare rental cars', aff('dcars', `https://www.discovercars.com/search?location=${encodeURIComponent(b.city)}${d0 ? '&pickup_date=' + d0 : ''}${d1 ? '&dropoff_date=' + d1 : ''}`)]);
+  return out.map(([n, u]) => `<a class="mini" href="${esc(u)}" target="_blank" rel="noopener sponsored">${n}</a>`).join(''); }
 function bookingForm() { const o = ORG.org, b = BKD, people = [{ name: (o.ownerName || 'Owner') + ' (owner)', email: o.ownerEmail }, ...(o.members || []).map(m => ({ name: m.name + (m.status === 'invited' ? ' (invited)' : ''), email: m.email }))].filter(p => p.email);
   const f = (k, label, ph, type = 'text') => `<div class="pf"><label for="bk_${k}">${label}</label><input class="input" id="bk_${k}" data-bk="${k}" type="${type}" placeholder="${esc(ph)}" value="${esc(b[k] || '')}"></div>`, trip = b.kind === 'flight' || b.kind === 'train';
   return `<div class="pcard" style="display:block"><b style="display:block;margin-bottom:8px">Book for a traveller</b>

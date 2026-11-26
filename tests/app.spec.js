@@ -288,7 +288,7 @@ test('hotel prices stay hidden until the server has a price source; compare link
   await expect(art).toBeVisible(); await expect(art.locator('.hrate')).toHaveCount(0);
   await expect(page.locator('[data-hf="cheap"]')).toHaveCount(0);
   await art.locator('[data-cmp]').click();
-  await expect(art.locator('.hcmp a')).toHaveCount(5);
+  await expect(art.locator('.hcmp a')).toHaveCount(6);
   expect(errors).toEqual([]);
 });
 
@@ -429,6 +429,26 @@ test('Business trips and payment information: business details and cards (last 4
   expect(errors).toEqual([]);
 });
 
+test('Partner links carry Safar\'s partner codes once set, and Explore shows tours and tickets', async ({ page }) => {
+  const errors = await offline(page, { api: 200 });
+  await page.route('**/safar-api.hamid-ebb.workers.dev/tours**', r => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ enabled: true, tours: [{ title: 'Colosseum skip-the-line tour', url: 'https://www.viator.com/tours/x', rating: 4.7, reviews: 900, price: 59, cur: 'USD', dur: '3 h' }] }) }));
+  await open(page);
+  const plain = await page.evaluate(() => [aff('booking', 'https://www.booking.com/x'), aff('viator', 'https://www.viator.com/a')]);
+  expect(plain).toEqual(['https://www.booking.com/x', 'https://www.viator.com/a']);
+  const tagged = await page.evaluate(() => { Object.assign(AFF.booking, { awinmid: '6776', awinaffid: '123' }); AFF.expedia.camref = 'CR1'; AFF.dcars.aid = 'safar'; AFF.viator.pid = 'P00123'; AFF.gyg.pid = 'GYG1'; Object.assign(AFF.tp, { marker: '999', kiwi: '647' });
+    return [aff('booking', 'https://www.booking.com/x'), aff('expedia', 'https://www.expedia.com/h'), aff('dcars', 'https://www.discovercars.com/search?location=FCO'), aff('viator', 'https://www.viator.com/a'), aff('gyg', 'https://www.getyourguide.com/s/?q=rome'), aff('kiwi', 'https://www.kiwi.com/deep?from=YVR'), aff('trip', 'https://www.trip.com/x')]; });
+  expect(tagged[0]).toBe('https://www.awin1.com/cread.php?awinmid=6776&awinaffid=123&ued=' + encodeURIComponent('https://www.booking.com/x'));
+  expect(tagged[1]).toContain('prf.hn/click/camref:CR1/destination:');
+  expect(tagged[2]).toContain('a_aid=safar'); expect(tagged[3]).toContain('pid=P00123'); expect(tagged[4]).toContain('partner_id=GYG1');
+  expect(tagged[5]).toContain('tp.media/r?marker=999&p=647'); expect(tagged[6]).toBe('https://www.trip.com/x');
+  await page.evaluate(() => { S.cities = [{ id: 'c1', name: 'Rome', lat: 41.9, lng: 12.5, nights: 3 }]; S.cur = 'c1'; saveNow(); go('explore'); });
+  await expect(page.locator('#exTours')).toContainText('Tours and tickets in Rome');
+  await expect(page.locator('#exTours')).toContainText('Colosseum skip-the-line tour');
+  await expect(page.locator('#exTours a', { hasText: 'GetYourGuide' })).toHaveAttribute('href', /partner_id=GYG1/);
+  await expect(page.locator('#exTours')).toContainText('partner links');
+  expect(errors.filter(e => !/503|offline/.test(e))).toEqual([]);
+});
+
 test('Safar Business: co-owners, handing over ownership, and booking travel for a traveller', async ({ page }) => {
   stagingOnly();
   const errors = await offline(page); const API = '**/safar-api.hamid-ebb.workers.dev';
@@ -505,7 +525,7 @@ test('Cost reports without a company account: save, print to PDF and CSV', async
   await page.$eval('[data-rsave]', e => e.click());
   await expect(page.locator('#teamIn')).toContainText('Trip to Rome'); await expect(page.locator('#teamIn')).toContainText('Saved');
   const html = await page.evaluate(() => reportHtml(LREP[0], { name: BIZ.company, taxId: BIZ.taxId }));
-  for (const t of ['Nexen Biosystems', 'Trip to Rome', 'Summary by category', 'includes tax', '450.00', 'Approval', 'safar.amovasolutions.com']) expect(html).toContain(t);
+  for (const t of ['Travel cost report', 'Trip to Rome', 'Summary by category', 'includes tax', '450.00', 'Approval', 'safar.amovasolutions.com']) expect(html).toContain(t);
   await page.$eval('[data-rpdf]', e => e.click());
   await expect.poll(() => page.evaluate(() => document.querySelector('#printFrame')?.contentDocument?.body?.textContent || '')).toContain('Trip to Rome');
   const dl = page.waitForEvent('download'); await page.$eval('[data-rlcsv]', e => e.click()); expect((await dl).suggestedFilename()).toMatch(/\.csv$/);
